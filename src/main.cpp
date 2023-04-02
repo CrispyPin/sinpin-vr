@@ -61,9 +61,8 @@ int main(int argc, char **argv)
 		auto overlay_err = ovr_overlay->CreateOverlay("deskpot", "Desktop view", &handle);
 		assert(overlay_err == 0);
 		ovr_overlay->ShowOverlay(handle);
-		ovr_overlay->SetOverlayTextureColorSpace(handle, vr::EColorSpace::ColorSpace_Gamma);
-		ovr_overlay->SetOverlayWidthInMeters(handle, 0.5f);
-		uint8_t col[4] = {20, 100, 100, 255};
+		ovr_overlay->SetOverlayWidthInMeters(handle, 2.5f);
+		uint8_t col[4] = {20, 50, 50, 255};
 		ovr_overlay->SetOverlayRaw(handle, &col, 1, 1, 4);
 		printf("Created overlay instance\n");
 	}
@@ -101,6 +100,22 @@ int main(int argc, char **argv)
 				assert(set_err == 0);
 			}
 		}
+		{
+			int pix_x, pix_y;
+			{
+				Window _t1;
+				int _t2;
+				unsigned int _t3;
+				XQueryPointer(xdisplay, root_window, &_t1, &_t1, &pix_x, &pix_y, &_t2, &_t2, &_t3);
+			}
+			float ratio = (float)height / (float)width;
+			float top_edge = 0.5f - ratio / 2.0f;
+			float x = pix_x / (float)width;
+			float y = pix_y / (float)width + top_edge;
+			auto pos = vr::HmdVector2_t{x, y};
+			ovr_overlay->SetOverlayCursorPositionOverride(handle, &pos);
+		}
+
 		glfwSwapBuffers(gl_window);
 
 		usleep(1000000 / FRAMERATE);
@@ -111,9 +126,10 @@ int main(int argc, char **argv)
 
 void cleanup(int _sig)
 {
-	printf("\nShutting down\n");
+	printf("\nCleaning up\n");
 	vr::VR_Shutdown();
 	glfwDestroyWindow(gl_window);
 	glfwTerminate();
+	printf("Shutting down\n");
 	exit(0);
 }
