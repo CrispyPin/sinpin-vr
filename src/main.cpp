@@ -1,7 +1,6 @@
 #include <signal.h>
 #include <assert.h>
 
-#include <X11/extensions/Xcomposite.h>
 #include <X11/Xutil.h>
 #include <GLFW/glfw3.h>
 
@@ -19,9 +18,10 @@ Window root_window;
 
 vr::IVRSystem *ovr_sys;
 vr::IVROverlay *ovr_overlay;
-vr::VROverlayHandle_t handle;
+vr::VROverlayHandle_t main_overlay;
+vr::Texture_t vr_texture;
 
-GLuint overlaytexture;
+GLuint screen_texture;
 GLFWwindow *gl_window;
 
 void cleanup(int _sig = 0);
@@ -58,32 +58,32 @@ int main(int argc, char **argv)
 	}
 
 	{
-		auto overlay_err = ovr_overlay->CreateOverlay("deskpot", "Desktop view", &handle);
+		auto overlay_err = ovr_overlay->CreateOverlay("deskpot", "Desktop view", &main_overlay);
 		assert(overlay_err == 0);
-		ovr_overlay->ShowOverlay(handle);
-		ovr_overlay->SetOverlayWidthInMeters(handle, 2.5f);
+		ovr_overlay->ShowOverlay(main_overlay);
+		ovr_overlay->SetOverlayWidthInMeters(main_overlay, 2.5f);
 		uint8_t col[4] = {20, 50, 50, 255};
-		ovr_overlay->SetOverlayRaw(handle, &col, 1, 1, 4);
+		ovr_overlay->SetOverlayRaw(main_overlay, &col, 1, 1, 4);
 		printf("Created overlay instance\n");
 	}
 
 	{
 		vr::HmdMatrix34_t transform;
-		auto err = ovr_overlay->GetOverlayTransformAbsolute(handle, &TRACKING_UNIVERSE, &transform);
+		auto err = ovr_overlay->GetOverlayTransformAbsolute(main_overlay, &TRACKING_UNIVERSE, &transform);
 		assert(err == 0);
 		transform.m[1][1] = -1;
-		err = ovr_overlay->SetOverlayTransformAbsolute(handle, TRACKING_UNIVERSE, &transform);
+		err = ovr_overlay->SetOverlayTransformAbsolute(main_overlay, TRACKING_UNIVERSE, &transform);
 		assert(err == 0);
 	}
 
 	{
-		glGenTextures(1, &overlaytexture);
-		glBindTexture(GL_TEXTURE_2D, overlaytexture);
-	}
+		glGenTextures(1, &screen_texture);
+		glBindTexture(GL_TEXTURE_2D, screen_texture);
 
-	vr::Texture_t vr_texture;
-	vr_texture.eColorSpace = vr::EColorSpace::ColorSpace_Auto;
-	vr_texture.eType = vr::ETextureType::TextureType_OpenGL;
+		vr_texture.eColorSpace = vr::EColorSpace::ColorSpace_Auto;
+		vr_texture.eType = vr::ETextureType::TextureType_OpenGL;
+		vr_texture.handle = (void *)(uintptr_t)screen_texture;
+	}
 
 	while (1)
 	{
@@ -92,15 +92,15 @@ int main(int argc, char **argv)
 		XDestroyImage(frame);
 
 		{
-			vr_texture.handle = (void *)(uintptr_t)overlaytexture;
-			auto set_err = ovr_overlay->SetOverlayTexture(handle, &vr_texture);
+			auto set_err = ovr_overlay->SetOverlayTexture(main_overlay, &vr_texture);
 			if (set_err)
 			{
 				printf("error setting texture: %d\n", set_err);
 				assert(set_err == 0);
 			}
 		}
-		{
+
+		{ // update cursor position
 			int pix_x, pix_y;
 			{
 				Window _t1;
@@ -108,16 +108,16 @@ int main(int argc, char **argv)
 				unsigned int _t3;
 				XQueryPointer(xdisplay, root_window, &_t1, &_t1, &pix_x, &pix_y, &_t2, &_t2, &_t3);
 			}
+			// TODO: make this work when aspect ratio is >1 (root window is taller than it is wide)
 			float ratio = (float)height / (float)width;
 			float top_edge = 0.5f - ratio / 2.0f;
 			float x = pix_x / (float)width;
 			float y = pix_y / (float)width + top_edge;
 			auto pos = vr::HmdVector2_t{x, y};
-			ovr_overlay->SetOverlayCursorPositionOverride(handle, &pos);
+			ovr_overlay->SetOverlayCursorPositionOverride(main_overlay, &pos);
 		}
 
 		glfwSwapBuffers(gl_window);
-
 		usleep(1000000 / FRAMERATE);
 	}
 	cleanup();
