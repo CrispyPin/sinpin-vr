@@ -6,7 +6,7 @@
 
 #include "openvr/openvr.h"
 
-static vr::ETrackingUniverseOrigin TRACKING_UNIVERSE = vr::ETrackingUniverseOrigin::TrackingUniverseStanding;
+auto TRACKING_UNIVERSE = vr::ETrackingUniverseOrigin::TrackingUniverseStanding;
 
 #define FRAMERATE 30
 
@@ -81,15 +81,6 @@ void init_overlay()
 	assert(err == 0);
 }
 
-void cleanup()
-{
-	printf("\nShutting down\n");
-	vr::VR_Shutdown();
-	glfwDestroyWindow(gl_window);
-	glfwTerminate();
-	exit(0);
-}
-
 void render_desktop()
 {
 	auto frame = XGetImage(xdisplay, root_window, 0, 0, width, height, AllPlanes, ZPixmap);
@@ -127,12 +118,12 @@ void interrupted(int _sig)
 
 int main()
 {
+	signal(SIGINT, interrupted);
+
 	init_x11();
 	init_glfw();
 	init_vr();
 	init_overlay();
-
-	signal(SIGINT, interrupted);
 
 	while (!should_exit)
 	{
@@ -142,6 +133,10 @@ int main()
 		glfwSwapBuffers(gl_window);
 		usleep(1000000 / FRAMERATE);
 	}
-	cleanup();
+
+	printf("\nShutting down\n");
+	vr::VR_Shutdown();
+	glfwDestroyWindow(gl_window);
+	glfwTerminate();
 	return 0;
 }
