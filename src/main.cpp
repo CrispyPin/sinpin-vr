@@ -9,8 +9,10 @@
 
 static vr::ETrackingUniverseOrigin TRACKING_UNIVERSE = vr::ETrackingUniverseOrigin::TrackingUniverseStanding;
 
-#define WIDTH 1024
-#define HEIGHT 1024
+#define FRAMERATE 30
+
+uint16_t width;
+uint16_t height;
 
 Display *xdisplay;
 Window root_window;
@@ -32,12 +34,16 @@ int main(int argc, char **argv)
 		assert(xdisplay != nullptr);
 		printf("Created X11 display\n");
 		root_window = XRootWindow(xdisplay, 0);
+		XWindowAttributes attributes;
+		XGetWindowAttributes(xdisplay, root_window, &attributes);
+		width = attributes.width;
+		height = attributes.height;
 	}
 
 	{
 		assert(glfwInit() == true);
 		glfwWindowHint(GLFW_VISIBLE, false);
-		gl_window = glfwCreateWindow(WIDTH, HEIGHT, "Overlay", nullptr, nullptr);
+		gl_window = glfwCreateWindow(width, height, "Overlay", nullptr, nullptr);
 		assert(gl_window != nullptr);
 		glfwMakeContextCurrent(gl_window);
 		printf("Created GLFW context\n");
@@ -82,8 +88,8 @@ int main(int argc, char **argv)
 
 	while (1)
 	{
-		auto frame = XGetImage(xdisplay, root_window, 0, 0, WIDTH, HEIGHT, AllPlanes, ZPixmap);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, WIDTH, HEIGHT, 0, GL_BGRA, GL_UNSIGNED_BYTE, frame->data);
+		auto frame = XGetImage(xdisplay, root_window, 0, 0, width, height, AllPlanes, ZPixmap);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, frame->data);
 		XDestroyImage(frame);
 
 		{
@@ -97,7 +103,7 @@ int main(int argc, char **argv)
 		}
 		glfwSwapBuffers(gl_window);
 
-		ovr_overlay->WaitFrameSync(20);
+		usleep(1000000 / FRAMERATE);
 	}
 	cleanup();
 	return 0;
