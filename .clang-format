@@ -1,0 +1,4 @@
+BasedOnStyle: Microsoft
+UseTab: Always
+ReflowComments: false
+ColumnLimit: 0
