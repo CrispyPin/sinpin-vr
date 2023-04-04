@@ -60,9 +60,21 @@ void init_glfw()
 void init_vr()
 {
 	vr::EVRInitError init_err;
+	ovr_sys = vr::VR_Init(&init_err, vr::EVRApplicationType::VRApplication_Background);
+	if (init_err == vr::EVRInitError::VRInitError_Init_NoServerForBackgroundApp)
+	{
+		printf("SteamVR is not running\n");
+		exit(1);
+	}
+	else if (init_err != 0)
+	{
+		printf("Could not initialize OpenVR session. Error code: %d\n", init_err);
+		exit(1);
+	}
+	vr::VR_ShutdownInternal();
 	ovr_sys = vr::VR_Init(&init_err, vr::EVRApplicationType::VRApplication_Overlay);
 	assert(init_err == 0);
-	printf("Initialized openvr\n");
+	printf("Initialized OpenVR\n");
 	ovr_overlay = vr::VROverlay();
 }
 
@@ -201,9 +213,9 @@ int main()
 {
 	signal(SIGINT, interrupted);
 
+	init_vr();
 	init_x11();
 	init_glfw();
-	init_vr();
 	init_overlay();
 
 	while (!should_exit)
