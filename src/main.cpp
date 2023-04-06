@@ -9,7 +9,7 @@
 #include "util.h"
 
 auto TRACKING_UNIVERSE = vr::ETrackingUniverseOrigin::TrackingUniverseStanding;
-const vr::HmdMatrix34_t DEFAULT_POSE = {{{1, 0, 0, 0}, {0, -1, 0, 1}, {0, 0, 1, 0}}};
+const vr::HmdMatrix34_t DEFAULT_POSE = {{{1, 0, 0, 0}, {0, 1, 0, 1}, {0, 0, 1, 0}}};
 
 #define FRAMERATE 30
 
@@ -88,6 +88,9 @@ void init_overlay()
 	ovr_overlay->SetOverlayRaw(main_overlay, &col, 1, 1, 4);
 	printf("Created overlay instance\n");
 
+	vr::VRTextureBounds_t bounds{0, 1, 1, 0}; // (flipping uv on y axis because opengl and xorg are opposite)
+	ovr_overlay->SetOverlayTextureBounds(main_overlay, &bounds);
+
 	ovr_overlay->SetOverlayTransformAbsolute(main_overlay, TRACKING_UNIVERSE, &DEFAULT_POSE);
 }
 
@@ -116,7 +119,7 @@ void update_cursor()
 	float ratio = (float)height / (float)width;
 	float top_edge = 0.5f - ratio / 2.0f;
 	float x = pix_x / (float)width;
-	float y = pix_y / (float)width + top_edge;
+	float y = 1.0f - (pix_y / (float)width + top_edge);
 	auto pos = vr::HmdVector2_t{x, y};
 	ovr_overlay->SetOverlayCursorPositionOverride(main_overlay, &pos);
 }
