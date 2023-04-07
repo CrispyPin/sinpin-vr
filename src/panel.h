@@ -28,8 +28,8 @@ class Panel
 	TrackerID _active_hand;
 	bool _is_held;
 
-	unsigned int _x, _y;
-	unsigned int _width, _height;
+	int _x, _y;
+	int _width, _height;
 	float _alpha;
 
 	vr::Texture_t _texture;

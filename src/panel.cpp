@@ -95,13 +95,20 @@ void Panel::Render()
 
 void Panel::UpdateCursor()
 {
-	auto global = _app->GetCursorPosition();
+	auto global_pos = _app->GetCursorPosition();
+	if (global_pos.x < _x || global_pos.x >= _x + _width || global_pos.y < _y || global_pos.y >= _y + _height)
+	{
+		_app->vr_overlay->ClearOverlayCursorPositionOverride(_id);
+		return;
+	}
+	int local_x = global_pos.x - _x;
+	int local_y = global_pos.y - _y;
+
 	// TODO: make this work when aspect ratio is >1 (root window is taller than it is wide)
-	// TODO take into account that the panel is smaller than the root window
 	float ratio = (float)_height / (float)_width;
 	float top_edge = 0.5f - ratio / 2.0f;
-	float x = global.x / (float)_width;
-	float y = 1.0f - (global.y / (float)_width + top_edge);
+	float x = local_x / (float)_width;
+	float y = 1.0f - (local_y / (float)_width + top_edge);
 	auto pos = vr::HmdVector2_t{x, y};
 	_app->vr_overlay->SetOverlayCursorPositionOverride(_id, &pos);
 }
