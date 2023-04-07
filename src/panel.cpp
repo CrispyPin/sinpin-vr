@@ -15,6 +15,7 @@ Panel::Panel(App *app, vr::HmdMatrix34_t start_pose, int index, int x, int y, in
 {
 	_name = "screen_view_" + std::to_string(index);
 	_alpha = 1.0f;
+	_meters = 1.0f;
 	_active_hand = -1;
 	glGenTextures(1, &_gl_texture);
 	glBindTexture(GL_TEXTURE_2D, _gl_texture);
@@ -53,18 +54,25 @@ void Panel::Update()
 	{
 		for (auto controller : _app->GetControllers())
 		{
-			vr::HmdMatrix34_t overlay_pose;
-			vr::ETrackingUniverseOrigin tracking_universe;
-			_app->vr_overlay->GetOverlayTransformAbsolute(_id, &tracking_universe, &overlay_pose);
-
-			auto controller_pos = GetPos(_app->GetTrackerPose(controller));
-			auto overlay_pos = GetPos(ConvertMat(overlay_pose));
-
-			bool close_enough = glm::length(overlay_pos - controller_pos) < 1.0f;
-
-			if (close_enough && _app->IsGrabActive(controller))
+			if (_app->IsGrabActive(controller))
 			{
-				ControllerGrab(controller);
+				vr::HmdMatrix34_t overlay_pose;
+				vr::ETrackingUniverseOrigin tracking_universe;
+				_app->vr_overlay->GetOverlayTransformAbsolute(_id, &tracking_universe, &overlay_pose);
+
+				auto controller_pos = GetPos(_app->GetTrackerPose(controller));
+
+				auto local_pos = glm::inverse(ConvertMat(overlay_pose)) * glm::vec4(controller_pos - GetPos(overlay_pose), 0);
+
+				float grab_area_thickness = 0.3f;
+				bool close_enough = glm::abs(local_pos.z) < grab_area_thickness;
+				close_enough &= glm::abs(local_pos.x) < _meters / 2.0f;
+				close_enough &= glm::abs(local_pos.y) < _meters / 2.0f;
+
+				if (close_enough)
+				{
+					ControllerGrab(controller);
+				}
 			}
 		}
 	}
@@ -116,6 +124,8 @@ void Panel::ControllerGrab(TrackerID controller)
 	_is_held = true;
 	_active_hand = controller;
 
+	_app->vr_overlay->SetOverlayColor(_id, 0.6f, 1.0f, 1.0f);
+
 	vr::HmdMatrix34_t abs_pose;
 	vr::ETrackingUniverseOrigin tracking_universe;
 
@@ -133,6 +143,8 @@ void Panel::ControllerRelease()
 {
 	printf("Released panel %d\n", _index);
 	_is_held = false;
+
+	_app->vr_overlay->SetOverlayColor(_id, 1.0f, 1.0f, 1.0f);
 
 	vr::HmdMatrix34_t relative_pose;
 	_app->vr_overlay->GetOverlayTransformTrackedDeviceRelative(_id, &_active_hand, &relative_pose);

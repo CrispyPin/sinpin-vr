@@ -30,6 +30,7 @@ class Panel
 
 	int _x, _y;
 	int _width, _height;
+	float _meters;
 	float _alpha;
 
 	vr::Texture_t _texture;

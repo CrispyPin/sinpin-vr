@@ -46,3 +46,8 @@ inline glm::vec3 GetPos(glm::mat4x4 mat)
 {
 	return glm::vec3(mat[3][0], mat[3][1], mat[3][2]);
 }
+
+inline glm::vec3 GetPos(vr::HmdMatrix34_t mat)
+{
+	return glm::vec3(mat.m[0][3], mat.m[1][3], mat.m[2][3]);
+}
