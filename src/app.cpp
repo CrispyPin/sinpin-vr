@@ -11,6 +11,7 @@ App::App()
 	InitOVR();
 	InitX11();
 	InitGLFW();
+	printf("\n");
 
 	glGenTextures(1, &_gl_frame);
 	glBindTexture(GL_TEXTURE_2D, _gl_frame);
@@ -124,6 +125,15 @@ glm::mat4 App::GetTrackerPose(TrackerID tracker)
 	return ConvertMat(tracked_pose.mDeviceToAbsoluteTracking);
 }
 
+vr::VRControllerState_t App::GetControllerState(TrackerID controller)
+{
+	vr::VRControllerState_t state;
+	auto get_state_err = vr_sys->GetControllerState(controller, &state, sizeof(vr::VRControllerState_t));
+	if (get_state_err == false)
+		printf("failed to get state of controller %d\n", controller);
+	return state;
+}
+
 bool App::IsGrabActive(TrackerID controller)
 {
 	vr::VRControllerState_t state;
@@ -132,9 +142,7 @@ bool App::IsGrabActive(TrackerID controller)
 		return false;
 
 	auto trigger_mask = vr::ButtonMaskFromId(vr::k_EButton_SteamVR_Trigger);
-	auto b_mask = vr::ButtonMaskFromId(vr::k_EButton_IndexController_B);
-	auto mask = trigger_mask | b_mask;
-	return (state.ulButtonPressed & mask) == mask;
+	return state.ulButtonPressed & trigger_mask;
 }
 
 CursorPos App::GetCursorPosition()

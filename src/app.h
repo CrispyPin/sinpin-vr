@@ -20,6 +20,7 @@ class App
 
 	std::vector<TrackerID> GetControllers();
 	glm::mat4 GetTrackerPose(TrackerID tracker);
+	vr::VRControllerState_t GetControllerState(TrackerID controller);
 	bool IsGrabActive(TrackerID controller);
 	CursorPos GetCursorPosition();
 

@@ -3,6 +3,7 @@
 #include "util.h"
 
 #include <X11/Xutil.h>
+#include <glm/common.hpp>
 #include <glm/glm.hpp>
 
 Panel::Panel(App *app, vr::HmdMatrix34_t start_pose, int index, int x, int y, int width, int height)
@@ -81,6 +82,15 @@ void Panel::Update()
 		if (!_app->IsGrabActive(_active_hand))
 		{
 			ControllerRelease();
+		}
+		auto state = _app->GetControllerState(_active_hand);
+		auto touchpad = state.rAxis[0];
+		if (touchpad.x != 0.0f)
+		{
+			// TODO take into account the current framerate
+			_alpha += touchpad.x * 0.05;
+			_alpha = glm::clamp(_alpha, 0.1f, 1.0f);
+			_app->vr_overlay->SetOverlayAlpha(_id, _alpha);
 		}
 	}
 }
