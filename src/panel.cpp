@@ -20,8 +20,8 @@ Panel::Panel(App *app, int index, int x, int y, int width, int height)
 	glGenTextures(1, &_gl_texture);
 	glBindTexture(GL_TEXTURE_2D, _gl_texture);
 
-	_texture.eColorSpace = vr::EColorSpace::ColorSpace_Auto;
-	_texture.eType = vr::ETextureType::TextureType_OpenGL;
+	_texture.eColorSpace = vr::ColorSpace_Auto;
+	_texture.eType = vr::TextureType_OpenGL;
 	_texture.handle = (void *)(uintptr_t)_gl_texture;
 
 	// create overlay
@@ -37,7 +37,6 @@ Panel::Panel(App *app, int index, int x, int y, int width, int height)
 		// (flipping uv on y axis because opengl and xorg are opposite)
 		vr::VRTextureBounds_t bounds{0, 1, 1, 0};
 		_app->vr_overlay->SetOverlayTextureBounds(_id, &bounds);
-
 		_app->vr_overlay->SetOverlayTransformAbsolute(_id, _app->_tracking_origin, &DEFAULT_POSE);
 	}
 }
@@ -49,23 +48,16 @@ void Panel::Update()
 
 	if (!_is_held)
 	{
-		vr::TrackedDeviceIndex_t controllers[8];
-		auto controller_count = _app->vr_sys->GetSortedTrackedDeviceIndicesOfClass(vr::ETrackedDeviceClass::TrackedDeviceClass_Controller, controllers, 8);
-
-		for (unsigned int i = 0; i < controller_count; i++)
+		for (auto controller : _app->GetControllers())
 		{
-			auto controller = controllers[i];
-
 			vr::HmdMatrix34_t overlay_pose;
 			vr::ETrackingUniverseOrigin tracking_universe;
 			_app->vr_overlay->GetOverlayTransformAbsolute(_id, &tracking_universe, &overlay_pose);
 
-			auto controller_pose = _app->GetTrackerPose(controller);
-			auto controller_pos = glm::vec3(controller_pose[3]);
-			auto overlay_pos = glm::vec3(ConvertMat(overlay_pose)[3]);
+			auto controller_pos = GetPos(_app->GetTrackerPose(controller));
+			auto overlay_pos = GetPos(ConvertMat(overlay_pose));
 
 			bool close_enough = glm::length(overlay_pos - controller_pos) < 1.0f;
-			// close_enough = true;
 
 			if (close_enough && _app->IsGrabActive(controller))
 			{

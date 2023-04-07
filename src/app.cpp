@@ -5,7 +5,7 @@
 
 App::App()
 {
-	_tracking_origin = vr::ETrackingUniverseOrigin::TrackingUniverseStanding;
+	_tracking_origin = vr::TrackingUniverseStanding;
 
 	InitOVR();
 	InitX11();
@@ -36,8 +36,9 @@ void App::InitX11()
 void App::InitOVR()
 {
 	vr::EVRInitError init_err;
-	vr_sys = vr::VR_Init(&init_err, vr::EVRApplicationType::VRApplication_Background);
-	if (init_err == vr::EVRInitError::VRInitError_Init_NoServerForBackgroundApp)
+	// would normally be using VRApplication_Overlay, but Background allows it to quit if steamvr is not running, instead of opening steamvr.
+	vr_sys = vr::VR_Init(&init_err, vr::VRApplication_Background);
+	if (init_err == vr::VRInitError_Init_NoServerForBackgroundApp)
 	{
 		printf("SteamVR is not running\n");
 		exit(1);
@@ -55,7 +56,7 @@ void App::InitGLFW()
 {
 	assert(glfwInit() == true);
 	glfwWindowHint(GLFW_VISIBLE, false);
-	// TODO this is creating a 1x1 window, should it be bigger?
+	// creating a 1x1 window, since it is hidden anyway
 	_gl_window = glfwCreateWindow(1, 1, "Overlay", nullptr, nullptr);
 	assert(_gl_window != nullptr);
 	glfwMakeContextCurrent(_gl_window);
@@ -68,6 +69,14 @@ void App::Update()
 	{
 		panel.Update();
 	}
+}
+
+std::vector<TrackerID> App::GetControllers()
+{
+	static const auto max_len = 64;
+	TrackerID controllers[max_len];
+	int controller_count = vr_sys->GetSortedTrackedDeviceIndicesOfClass(vr::TrackedDeviceClass_Controller, controllers, max_len);
+	return std::vector<TrackerID>(controllers, controllers + controller_count);
 }
 
 glm::mat4 App::GetTrackerPose(TrackerID tracker)
@@ -83,19 +92,15 @@ glm::mat4 App::GetTrackerPose(TrackerID tracker)
 	return ConvertMat(tracked_pose.mDeviceToAbsoluteTracking);
 }
 
-bool App::IsGrabActive(vr::TrackedDeviceIndex_t controller)
+bool App::IsGrabActive(TrackerID controller)
 {
 	vr::VRControllerState_t state;
 	auto get_state_err = vr_sys->GetControllerState(controller, &state, sizeof(vr::VRControllerState_t));
 	if (get_state_err == false)
-	{
-		printf("Error getting controller state: %d\n", get_state_err);
 		return false;
-	}
-	// printf("got state\n");
 
-	auto trigger_mask = vr::ButtonMaskFromId(vr::EVRButtonId::k_EButton_SteamVR_Trigger);
-	auto b_mask = vr::ButtonMaskFromId(vr::EVRButtonId::k_EButton_IndexController_B);
+	auto trigger_mask = vr::ButtonMaskFromId(vr::k_EButton_SteamVR_Trigger);
+	auto b_mask = vr::ButtonMaskFromId(vr::k_EButton_IndexController_B);
 	auto mask = trigger_mask | b_mask;
 	return (state.ulButtonPressed & mask) == mask;
 }

@@ -3,6 +3,7 @@
 #include <string>
 
 const vr::HmdMatrix34_t DEFAULT_POSE = {{{1, 0, 0, 0}, {0, 1, 0, 1}, {0, 0, 1, 0}}};
+
 class App;
 
 class Panel

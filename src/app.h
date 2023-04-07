@@ -17,8 +17,9 @@ class App
 	~App();
 	void Update();
 
+	std::vector<TrackerID> GetControllers();
 	glm::mat4 GetTrackerPose(TrackerID tracker);
-	bool IsGrabActive(vr::TrackedDeviceIndex_t controller);
+	bool IsGrabActive(TrackerID controller);
 	CursorPos GetCursorPosition();
 
 	Display *_xdisplay;
