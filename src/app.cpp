@@ -1,6 +1,7 @@
 #include "app.h"
 #include "panel.h"
 #include "util.h"
+#include <X11/extensions/Xrandr.h>
 #include <cassert>
 
 App::App()
@@ -11,7 +12,21 @@ App::App()
 	InitX11();
 	InitGLFW();
 
-	_panels.push_back(Panel(this, 0, 0, 0, _root_width, _root_height));
+	glGenTextures(1, &_gl_frame);
+	glBindTexture(GL_TEXTURE_2D, _gl_frame);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+	int monitor_count;
+	XRRMonitorInfo *monitor_info = XRRGetMonitors(_xdisplay, _root_window, 1, &monitor_count);
+	printf("found %d monitors:\n", monitor_count);
+
+	for (int i = 0; i < monitor_count; i++)
+	{
+		XRRMonitorInfo mon = monitor_info[i];
+		printf("screen %d: pos(%d, %d) wh(%d, %d)\n", i, mon.x, mon.y, mon.width, mon.height);
+
+		_panels.push_back(Panel(this, i, mon.x, mon.y, mon.width, mon.height));
+	}
 }
 
 App::~App()
@@ -65,6 +80,17 @@ void App::InitGLFW()
 
 void App::Update()
 {
+	auto frame = XGetImage(
+		_xdisplay,
+		_root_window,
+		0, 0,
+		_root_width, _root_height,
+		AllPlanes,
+		ZPixmap);
+	glBindTexture(GL_TEXTURE_2D, _gl_frame);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, _root_width, _root_height, 0, GL_BGRA, GL_UNSIGNED_BYTE, frame->data);
+	XDestroyImage(frame);
+
 	for (auto &panel : _panels)
 	{
 		panel.Update();

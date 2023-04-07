@@ -1,3 +1,4 @@
+#define GL_GLEXT_PROTOTYPES
 #include "util.h"
 #include <GLFW/glfw3.h>
 #include <X11/Xutil.h>
@@ -25,6 +26,7 @@ class App
 	Display *_xdisplay;
 	Window _root_window;
 	GLFWwindow *_gl_window;
+	GLuint _gl_frame;
 
 	int _root_width;
 	int _root_height;
