@@ -20,12 +20,18 @@ App::App()
 	XRRMonitorInfo *monitor_info = XRRGetMonitors(_xdisplay, _root_window, 1, &monitor_count);
 	printf("found %d monitors:\n", monitor_count);
 
+	float pixels_per_meter = 1920;
+	float x_min = -(monitor_info[0].x + monitor_info[0].width / 2.0f);
+
 	for (int i = 0; i < monitor_count; i++)
 	{
 		XRRMonitorInfo mon = monitor_info[i];
-		printf("screen %d: pos(%d, %d) wh(%d, %d)\n", i, mon.x, mon.y, mon.width, mon.height);
+		printf("screen %d: pos(%d, %d) %dx%d\n", i, mon.x, mon.y, mon.width, mon.height);
 
-		_panels.push_back(Panel(this, i, mon.x, mon.y, mon.width, mon.height));
+		float pos_x = (x_min + mon.x) / pixels_per_meter;
+		float pos_y = 1.2f;
+		vr::HmdMatrix34_t start_pose = {{{1, 0, 0, pos_x}, {0, 1, 0, pos_y}, {0, 0, 1, 0}}};
+		_panels.push_back(Panel(this, start_pose, i, mon.x, mon.y, mon.width, mon.height));
 	}
 }
 

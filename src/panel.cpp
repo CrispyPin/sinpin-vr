@@ -5,7 +5,7 @@
 #include <X11/Xutil.h>
 #include <glm/glm.hpp>
 
-Panel::Panel(App *app, int index, int x, int y, int width, int height)
+Panel::Panel(App *app, vr::HmdMatrix34_t start_pose, int index, int x, int y, int width, int height)
 	: _app(app),
 	  _index(index),
 	  _x(x),
@@ -33,7 +33,6 @@ Panel::Panel(App *app, int index, int x, int y, int width, int height)
 		auto overlay_create_err = _app->vr_overlay->CreateOverlay(_name.c_str(), _name.c_str(), &_id);
 		assert(overlay_create_err == 0);
 		_app->vr_overlay->ShowOverlay(_id);
-		// _app->vr_overlay->SetOverlayWidthInMeters(_id, 2.5f);
 		uint8_t col[4] = {20, 50, 50, 255};
 		_app->vr_overlay->SetOverlayRaw(_id, &col, 1, 1, 4);
 		printf("Created overlay instance %d\n", _index);
@@ -41,8 +40,6 @@ Panel::Panel(App *app, int index, int x, int y, int width, int height)
 		// (flipping uv on y axis because opengl and xorg are opposite)
 		vr::VRTextureBounds_t bounds{0, 1, 1, 0};
 		_app->vr_overlay->SetOverlayTextureBounds(_id, &bounds);
-		vr::HmdMatrix34_t start_pose = DEFAULT_POSE;
-		start_pose.m[0][3] += index * 1.5f;
 		_app->vr_overlay->SetOverlayTransformAbsolute(_id, _app->_tracking_origin, &start_pose);
 	}
 }

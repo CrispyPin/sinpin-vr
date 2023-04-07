@@ -10,7 +10,7 @@ class App;
 class Panel
 {
   public:
-	Panel(App *app, int index, int xmin, int xmax, int ymin, int ymax);
+	Panel(App *app, vr::HmdMatrix34_t start_pose, int index, int xmin, int xmax, int ymin, int ymax);
 
 	void Update();
 
