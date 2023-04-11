@@ -13,6 +13,7 @@ class Panel
 	Panel(App *app, vr::HmdMatrix34_t start_pose, int index, int xmin, int xmax, int ymin, int ymax);
 
 	void Update();
+	void SetHidden(bool state);
 
   private:
 	void Render();
@@ -32,6 +33,7 @@ class Panel
 	int _width, _height;
 	float _meters;
 	float _alpha;
+	bool _hidden;
 
 	vr::Texture_t _texture;
 	GLuint _gl_texture;

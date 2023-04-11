@@ -55,7 +55,7 @@ void Panel::Update()
 	{
 		for (auto controller : _app->GetControllers())
 		{
-			if (_app->IsGrabActive(controller))
+			if (_app->IsInputJustPressed(controller, _app->_input_handles.grab))
 			{
 				vr::HmdMatrix34_t overlay_pose;
 				vr::ETrackingUniverseOrigin tracking_universe;
@@ -79,19 +79,19 @@ void Panel::Update()
 	}
 	else
 	{
-		if (!_app->IsGrabActive(_active_hand))
+		if (!_app->GetControllerInputDigital(_active_hand, _app->_input_handles.grab).bState)
 		{
 			ControllerRelease();
 		}
-		auto state = _app->GetControllerState(_active_hand);
-		auto touchpad = state.rAxis[0];
-		if (touchpad.x != 0.0f)
-		{
-			// TODO take into account the current framerate
-			_alpha += touchpad.x * 0.05;
-			_alpha = glm::clamp(_alpha, 0.1f, 1.0f);
-			_app->vr_overlay->SetOverlayAlpha(_id, _alpha);
-		}
+		// auto state = _app->GetControllerState(_active_hand);
+		// auto touchpad = state.rAxis[0];
+		// if (touchpad.x != 0.0f)
+		// {
+		// 	// TODO take into account the current framerate
+		// 	_alpha += touchpad.x * 0.05;
+		// 	_alpha = glm::clamp(_alpha, 0.1f, 1.0f);
+		// 	_app->vr_overlay->SetOverlayAlpha(_id, _alpha);
+		// }
 	}
 }
 
@@ -106,6 +106,15 @@ void Panel::Render()
 
 	auto set_texture_err = _app->vr_overlay->SetOverlayTexture(_id, &_texture);
 	assert(set_texture_err == 0);
+}
+
+void Panel::SetHidden(bool state)
+{
+	_hidden = state;
+	if (state)
+		_app->vr_overlay->HideOverlay(_id);
+	else
+		_app->vr_overlay->ShowOverlay(_id);
 }
 
 void Panel::UpdateCursor()
@@ -130,7 +139,7 @@ void Panel::UpdateCursor()
 
 void Panel::ControllerGrab(TrackerID controller)
 {
-	printf("Grabbed panel %d\n", _index);
+	// printf("Grabbed panel %d\n", _index);
 	_is_held = true;
 	_active_hand = controller;
 
@@ -151,7 +160,7 @@ void Panel::ControllerGrab(TrackerID controller)
 
 void Panel::ControllerRelease()
 {
-	printf("Released panel %d\n", _index);
+	// printf("Released panel %d\n", _index);
 	_is_held = false;
 
 	_app->vr_overlay->SetOverlayColor(_id, 1.0f, 1.0f, 1.0f);

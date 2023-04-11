@@ -1,0 +1,33 @@
+{
+	"/actions/main": {
+		"sources": [
+			{
+				"path": "/user/hand/right/input/b",
+				"mode": "button",
+				"inputs": {
+					"long": {
+						"output": "/actions/main/in/toggleall"
+					}
+				}
+			},
+			{
+				"path": "/user/hand/right/input/thumbstick",
+				"mode": "joystick",
+				"inputs": {
+					"position": {
+						"output": "/actions/main/in/distance"
+					}
+				}
+			},
+			{
+				"path": "/user/hand/right/input/trigger",
+				"mode": "button",
+				"inputs": {
+					"click": {
+						"output": "/actions/main/in/grab"
+					}
+				}
+			}
+		]
+	}
+}

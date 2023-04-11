@@ -1,0 +1,40 @@
+{
+	"default_bindings": [
+		{
+			"controller_type": "knuckles",
+			"binding_url": "index_controller.json"
+		}
+	],
+	"actions": [
+		{
+			"name": "/actions/main/in/ToggleAll",
+			"requirement": "mandatory",
+			"type": "boolean"
+		},
+		{
+			"name": "/actions/main/in/Grab",
+			"requirement": "mandatory",
+			"type": "boolean"
+		},
+		{
+			"name": "/actions/main/in/Distance",
+			"requirement": "suggested",
+			"type": "vector2"
+		}
+	],
+	"action_sets": [
+		{
+			"name": "/actions/main",
+			"usage": "leftright"
+		}
+	],
+	"localization": [
+		{
+			"language_tag": "en_us",
+			"/actions/main": "Overlay actions",
+			"/actions/main/in/ToggleAll": "Toggle all",
+			"/actions/main/in/Grab": "Grab panel",
+			"/actions/main/in/Distance": "Move away"
+		}
+	]
+}

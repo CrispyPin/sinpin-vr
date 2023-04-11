@@ -7,6 +7,7 @@
 App::App()
 {
 	_tracking_origin = vr::TrackingUniverseStanding;
+	// _hidden = false;
 
 	InitOVR();
 	InitX11();
@@ -33,6 +34,22 @@ App::App()
 		float pos_y = 1.2f;
 		vr::HmdMatrix34_t start_pose = {{{1, 0, 0, pos_x}, {0, 1, 0, pos_y}, {0, 0, 1, 0}}};
 		_panels.push_back(Panel(this, start_pose, i, mon.x, mon.y, mon.width, mon.height));
+	}
+
+	{ // initialize SteamVR input
+		auto exe_path = std::filesystem::read_symlink("/proc/self/exe");
+		_actions_path = exe_path.parent_path().string() + "/bindings/action_manifest.json";
+		printf("actions path: %s\n", _actions_path.c_str());
+		vr_input->SetActionManifestPath(_actions_path.c_str());
+
+		auto action_err = vr_input->GetActionHandle("/actions/main/in/Grab", &_input_handles.grab);
+		assert(action_err == 0);
+		action_err = vr_input->GetActionHandle("/actions/main/in/ToggleAll", &_input_handles.toggle);
+		assert(action_err == 0);
+		action_err = vr_input->GetActionHandle("/actions/main/in/Distance", &_input_handles.distance);
+		assert(action_err == 0);
+		action_err = vr_input->GetActionSetHandle("/actions/main", &_input_handles.set);
+		assert(action_err == 0);
 	}
 }
 
@@ -72,6 +89,7 @@ void App::InitOVR()
 	}
 	printf("Initialized OpenVR\n");
 	vr_overlay = vr::VROverlay();
+	vr_input = vr::VRInput();
 }
 
 void App::InitGLFW()
@@ -87,6 +105,42 @@ void App::InitGLFW()
 
 void App::Update()
 {
+	UpdateInput();
+	if (!_hidden)
+	{
+		UpdateFramebuffer();
+		for (auto &panel : _panels)
+		{
+			panel.Update();
+		}
+	}
+}
+
+void App::UpdateInput()
+{
+	vr::VRActiveActionSet_t main;
+	main.ulActionSet = _input_handles.set;
+	main.ulRestrictedToDevice = 0;
+	vr_input->UpdateActionState(&main, sizeof(vr::VRActiveActionSet_t), 1);
+
+	vr_sys->GetDeviceToAbsoluteTrackingPose(_tracking_origin, 0, _tracker_poses, vr::k_unMaxTrackedDeviceCount);
+
+	for (unsigned int i = 0; i < vr::k_unMaxTrackedDeviceCount; i++)
+	{
+		if (IsInputJustPressed(i, _input_handles.toggle))
+		{
+			_hidden = !_hidden;
+			for (auto &panel : _panels)
+			{
+				panel.SetHidden(_hidden);
+			}
+			break;
+		}
+	}
+}
+
+void App::UpdateFramebuffer()
+{
 	auto frame = XGetImage(
 		_xdisplay,
 		_root_window,
@@ -97,11 +151,6 @@ void App::Update()
 	glBindTexture(GL_TEXTURE_2D, _gl_frame);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, _root_width, _root_height, 0, GL_BGRA, GL_UNSIGNED_BYTE, frame->data);
 	XDestroyImage(frame);
-
-	for (auto &panel : _panels)
-	{
-		panel.Update();
-	}
 }
 
 std::vector<TrackerID> App::GetControllers()
@@ -114,35 +163,27 @@ std::vector<TrackerID> App::GetControllers()
 
 glm::mat4 App::GetTrackerPose(TrackerID tracker)
 {
-	vr::VRControllerState_t state;
-	vr::TrackedDevicePose_t tracked_pose;
-	vr_sys->GetControllerStateWithPose(
-		_tracking_origin,
-		tracker,
-		&state,
-		sizeof(vr::VRControllerState_t),
-		&tracked_pose);
-	return ConvertMat(tracked_pose.mDeviceToAbsoluteTracking);
+	return ConvertMat(_tracker_poses[tracker].mDeviceToAbsoluteTracking);
 }
 
-vr::VRControllerState_t App::GetControllerState(TrackerID controller)
+vr::InputDigitalActionData_t App::GetControllerInputDigital(TrackerID controller, vr::VRActionHandle_t action)
 {
-	vr::VRControllerState_t state;
-	auto get_state_err = vr_sys->GetControllerState(controller, &state, sizeof(vr::VRControllerState_t));
-	if (get_state_err == false)
-		printf("failed to get state of controller %d\n", controller);
+	vr::InputDigitalActionData_t state;
+	vr_input->GetDigitalActionData(action, &state, sizeof(vr::InputDigitalActionData_t), 0);
 	return state;
 }
 
-bool App::IsGrabActive(TrackerID controller)
+vr::InputAnalogActionData_t App::GetControllerInputAnalog(TrackerID controller, vr::VRActionHandle_t action)
 {
-	vr::VRControllerState_t state;
-	auto get_state_err = vr_sys->GetControllerState(controller, &state, sizeof(vr::VRControllerState_t));
-	if (get_state_err == false)
-		return false;
+	vr::InputAnalogActionData_t state;
+	vr_input->GetAnalogActionData(action, &state, sizeof(vr::InputAnalogActionData_t), 0);
+	return state;
+}
 
-	auto trigger_mask = vr::ButtonMaskFromId(vr::k_EButton_SteamVR_Trigger);
-	return state.ulButtonPressed & trigger_mask;
+bool App::IsInputJustPressed(TrackerID controller, vr::VRActionHandle_t action)
+{
+	auto data = GetControllerInputDigital(controller, action);
+	return data.bState && data.bChanged;
 }
 
 CursorPos App::GetCursorPosition()
