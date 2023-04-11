@@ -1,13 +1,11 @@
 #include "app.h"
 #include "panel.h"
-#include "util.h"
 #include <X11/extensions/Xrandr.h>
 #include <cassert>
 
 App::App()
 {
 	_tracking_origin = vr::TrackingUniverseStanding;
-	// _hidden = false;
 
 	InitOVR();
 	InitX11();
@@ -24,6 +22,7 @@ App::App()
 
 	float pixels_per_meter = 1920;
 	float x_min = -(monitor_info[0].x + monitor_info[0].width / 2.0f);
+	// float x_min = _root_width / -2.0f;
 
 	for (int i = 0; i < monitor_count; i++)
 	{

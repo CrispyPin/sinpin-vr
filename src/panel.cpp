@@ -1,10 +1,4 @@
 #include "panel.h"
-#include "app.h"
-#include "util.h"
-
-#include <X11/Xutil.h>
-#include <glm/common.hpp>
-#include <glm/glm.hpp>
 
 Panel::Panel(App *app, vr::HmdMatrix34_t start_pose, int index, int x, int y, int width, int height)
 	: _app(app),
@@ -12,12 +6,13 @@ Panel::Panel(App *app, vr::HmdMatrix34_t start_pose, int index, int x, int y, in
 	  _x(x),
 	  _y(y),
 	  _width(width),
-	  _height(height)
+	  _height(height),
+	  _grab_component(app)
 {
 	_name = "screen_view_" + std::to_string(index);
 	_alpha = 1.0f;
 	_meters = 1.0f;
-	_active_hand = -1;
+
 	glGenTextures(1, &_gl_texture);
 	glBindTexture(GL_TEXTURE_2D, _gl_texture);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -51,48 +46,7 @@ void Panel::Update()
 	Render();
 	UpdateCursor();
 
-	if (!_is_held)
-	{
-		for (auto controller : _app->GetControllers())
-		{
-			if (_app->IsInputJustPressed(controller, _app->_input_handles.grab))
-			{
-				vr::HmdMatrix34_t overlay_pose;
-				vr::ETrackingUniverseOrigin tracking_universe;
-				_app->vr_overlay->GetOverlayTransformAbsolute(_id, &tracking_universe, &overlay_pose);
-
-				auto controller_pos = GetPos(_app->GetTrackerPose(controller));
-
-				auto local_pos = glm::inverse(ConvertMat(overlay_pose)) * glm::vec4(controller_pos - GetPos(overlay_pose), 0);
-
-				float grab_area_thickness = 0.3f;
-				bool close_enough = glm::abs(local_pos.z) < grab_area_thickness;
-				close_enough &= glm::abs(local_pos.x) < _meters / 2.0f;
-				close_enough &= glm::abs(local_pos.y) < _meters / 2.0f;
-
-				if (close_enough)
-				{
-					ControllerGrab(controller);
-				}
-			}
-		}
-	}
-	else
-	{
-		if (!_app->GetControllerInputDigital(_active_hand, _app->_input_handles.grab).bState)
-		{
-			ControllerRelease();
-		}
-		// auto state = _app->GetControllerState(_active_hand);
-		// auto touchpad = state.rAxis[0];
-		// if (touchpad.x != 0.0f)
-		// {
-		// 	// TODO take into account the current framerate
-		// 	_alpha += touchpad.x * 0.05;
-		// 	_alpha = glm::clamp(_alpha, 0.1f, 1.0f);
-		// 	_app->vr_overlay->SetOverlayAlpha(_id, _alpha);
-		// }
-	}
+	_grab_component.Update(_id, &_meters);
 }
 
 void Panel::Render()
@@ -135,43 +89,4 @@ void Panel::UpdateCursor()
 	float y = 1.0f - (local_y / (float)_width + top_edge);
 	auto pos = vr::HmdVector2_t{x, y};
 	_app->vr_overlay->SetOverlayCursorPositionOverride(_id, &pos);
-}
-
-void Panel::ControllerGrab(TrackerID controller)
-{
-	// printf("Grabbed panel %d\n", _index);
-	_is_held = true;
-	_active_hand = controller;
-
-	_app->vr_overlay->SetOverlayColor(_id, 0.6f, 1.0f, 1.0f);
-
-	vr::HmdMatrix34_t abs_pose;
-	vr::ETrackingUniverseOrigin tracking_universe;
-
-	_app->vr_overlay->GetOverlayTransformAbsolute(_id, &tracking_universe, &abs_pose);
-	auto abs_mat = ConvertMat(abs_pose);
-
-	auto controller_mat = _app->GetTrackerPose(controller);
-
-	vr::HmdMatrix34_t relative_pose = ConvertMat(glm::inverse(controller_mat) * (abs_mat));
-
-	_app->vr_overlay->SetOverlayTransformTrackedDeviceRelative(_id, controller, &relative_pose);
-}
-
-void Panel::ControllerRelease()
-{
-	// printf("Released panel %d\n", _index);
-	_is_held = false;
-
-	_app->vr_overlay->SetOverlayColor(_id, 1.0f, 1.0f, 1.0f);
-
-	vr::HmdMatrix34_t relative_pose;
-	_app->vr_overlay->GetOverlayTransformTrackedDeviceRelative(_id, &_active_hand, &relative_pose);
-	auto relative_mat = ConvertMat(relative_pose);
-
-	auto controller_mat = _app->GetTrackerPose(_active_hand);
-
-	vr::HmdMatrix34_t new_pose = ConvertMat(controller_mat * relative_mat);
-
-	_app->vr_overlay->SetOverlayTransformAbsolute(_id, _app->_tracking_origin, &new_pose);
 }

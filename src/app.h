@@ -1,4 +1,6 @@
+#pragma once
 #define GL_GLEXT_PROTOTYPES
+
 #include "util.h"
 #include <GLFW/glfw3.h>
 #include <X11/Xutil.h>
