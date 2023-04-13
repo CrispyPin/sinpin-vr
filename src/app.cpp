@@ -21,18 +21,23 @@ App::App()
 	printf("found %d monitors:\n", monitor_count);
 
 	float pixels_per_meter = 1920;
-	float x_min = -(monitor_info[0].x + monitor_info[0].width / 2.0f);
-	// float x_min = _root_width / -2.0f;
+	float total_width_meters = _root_width / pixels_per_meter;
+	float total_height_meters = _root_height / pixels_per_meter;
 
 	for (int i = 0; i < monitor_count; i++)
 	{
 		XRRMonitorInfo mon = monitor_info[i];
 		printf("screen %d: pos(%d, %d) %dx%d\n", i, mon.x, mon.y, mon.width, mon.height);
 
-		float pos_x = (x_min + mon.x) / pixels_per_meter;
-		float pos_y = 1.2f;
-		vr::HmdMatrix34_t start_pose = {{{1, 0, 0, pos_x}, {0, 1, 0, pos_y}, {0, 0, 1, 0}}};
-		_panels.push_back(Panel(this, start_pose, i, mon.x, mon.y, mon.width, mon.height));
+		_panels.push_back(Panel(this, i, mon.x, mon.y, mon.width, mon.height));
+
+		float width = mon.width / pixels_per_meter;
+		float pos_x = mon.x / pixels_per_meter + width / 2.0f - total_width_meters / 2.0f;
+		float height = mon.height / pixels_per_meter;
+		float pos_y = 1.2f + mon.y / pixels_per_meter - height / 2.0f + total_height_meters / 2.0f;
+		VRMat start_pose = {{{1, 0, 0, pos_x}, {0, 1, 0, pos_y}, {0, 0, 1, 0}}};
+		_panels[i].GetOverlay()->SetTransformWorld(&start_pose);
+		_panels[i].GetOverlay()->SetWidth(width);
 	}
 
 	{ // initialize SteamVR input
@@ -107,10 +112,10 @@ void App::InitRootOverlay()
 	_root_overlay = Overlay(this, "root");
 	_root_overlay.SetAlpha(0.2f);
 	// clang-format off
-	vr::HmdMatrix34_t root_start_pose = {{
-		{0.1f,  0.0f,	0.0, 0},
-		{0.0f,  0.0f,	1.0f, 0.8f},
-		{0.0f, -0.5f,	0.0f, 0.25f}
+	VRMat root_start_pose = {{
+		{0.25f,	0.0f,	0.0f, 0},
+		{0.0f,	0.25f,	0.0f, 0.8f},
+		{0.0f,	0.0f,	1.0f, 0}
 	}};
 	// clang-format on
 	_root_overlay.SetTransformWorld(&root_start_pose);

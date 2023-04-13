@@ -2,7 +2,7 @@
 #include "app.h"
 #include "overlay.h"
 
-Panel::Panel(App *app, vr::HmdMatrix34_t start_pose, int index, int x, int y, int width, int height)
+Panel::Panel(App *app, int index, int x, int y, int width, int height)
 	: _app(app),
 	  _index(index),
 	  _x(x),
@@ -23,7 +23,7 @@ Panel::Panel(App *app, vr::HmdMatrix34_t start_pose, int index, int x, int y, in
 	_texture.eType = vr::TextureType_OpenGL;
 	_texture.handle = (void *)(uintptr_t)_gl_texture;
 
-	_overlay.SetTransformWorld(&start_pose);
+	// _overlay;
 }
 
 void Panel::Update()
