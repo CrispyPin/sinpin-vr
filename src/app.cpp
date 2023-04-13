@@ -1,5 +1,4 @@
 #include "app.h"
-#include "panel.h"
 #include <X11/extensions/Xrandr.h>
 #include <cassert>
 
@@ -10,6 +9,7 @@ App::App()
 	InitOVR();
 	InitX11();
 	InitGLFW();
+	InitRootOverlay();
 	printf("\n");
 
 	glGenTextures(1, &_gl_frame);
@@ -102,11 +102,40 @@ void App::InitGLFW()
 	printf("Created GLFW context\n");
 }
 
+void App::InitRootOverlay()
+{
+	_root_overlay = Overlay(this, "root");
+	_root_overlay.SetAlpha(0.2f);
+	// clang-format off
+	vr::HmdMatrix34_t root_start_pose = {{
+		{0.1f,  0.0f,	0.0, 0},
+		{0.0f,  0.0f,	1.0f, 0.8f},
+		{0.0f, -0.5f,	0.0f, 0.25f}
+	}};
+	// clang-format on
+	_root_overlay.SetTransformWorld(&root_start_pose);
+
+	_root_overlay._GrabBeginCallback = [this](TrackerID controller) {
+		for (auto &panel : _panels)
+		{
+			panel.GetOverlay()->ControllerGrab(controller);
+		}
+	};
+	_root_overlay._GrabEndCallback = [this](TrackerID controller) {
+		for (auto &panel : _panels)
+		{
+			panel.GetOverlay()->ControllerRelease();
+		}
+	};
+	printf("Created root overlay instance\n");
+}
+
 void App::Update()
 {
 	UpdateInput();
 	if (!_hidden)
 	{
+		_root_overlay.Update();
 		UpdateFramebuffer();
 		for (auto &panel : _panels)
 		{
@@ -129,6 +158,7 @@ void App::UpdateInput()
 		if (IsInputJustPressed(i, _input_handles.toggle))
 		{
 			_hidden = !_hidden;
+			_root_overlay.SetHidden(_hidden);
 			for (auto &panel : _panels)
 			{
 				panel.SetHidden(_hidden);

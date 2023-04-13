@@ -1,13 +1,13 @@
 #pragma once
 #define GL_GLEXT_PROTOTYPES
 
+#include "overlay.h"
+#include "panel.h"
 #include "util.h"
 #include <GLFW/glfw3.h>
 #include <X11/Xutil.h>
 #include <filesystem>
 #include <vector>
-
-class Panel;
 
 struct CursorPos
 {
@@ -54,6 +54,7 @@ class App
 	InputHandles _input_handles;
 	vr::TrackedDevicePose_t _tracker_poses[vr::k_unMaxTrackedDeviceCount];
 
+	Overlay _root_overlay;
 	std::vector<Panel> _panels;
 	bool _hidden = false;
 
@@ -61,6 +62,7 @@ class App
 	void InitX11();
 	void InitOVR();
 	void InitGLFW();
+	void InitRootOverlay();
 
 	void UpdateFramebuffer();
 	void UpdateInput();

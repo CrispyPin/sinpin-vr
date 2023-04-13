@@ -1,7 +1,17 @@
 
+# CC := g++
+CC := clang++
+LFLAGS := -lX11 -lXrandr -lglfw -lGL
+LIBS := openvr/libopenvr_api.so
+SRC := src/*.cpp
+OUT := ./overlay
+CPPFLAGS := -Wall -std=c++17 $(LFLAGS) $(LIBS) $(SRC) -o $(OUT)
 
 build:
-	g++ -Wall -lX11 -lXrandr -lglfw -lGL openvr/libopenvr_api.so src/*.cpp -o overlay
+	$(CC) -g $(CPPFLAGS)
+
+release:
+	$(CC) $(CPPFLAGS)
 
 run: build
 	./overlay

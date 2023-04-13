@@ -1,13 +1,14 @@
 #pragma once
+#include "overlay.h"
 #define GL_GLEXT_PROTOTYPES
 
-#include "grab_component.h"
 #include "util.h"
 #include <GLFW/glfw3.h>
 
 const vr::HmdMatrix34_t DEFAULT_POSE = {{{1, 0, 0, 0}, {0, 1, 0, 1}, {0, 0, 1, 0}}};
 
 class App;
+class Overlay;
 
 class Panel
 {
@@ -17,22 +18,19 @@ class Panel
 	void Update();
 	void SetHidden(bool state);
 
+	Overlay *GetOverlay();
+
   private:
 	void Render();
 	void UpdateCursor();
 
 	App *_app;
-	OverlayID _id;
 	int _index;
-	std::string _name;
 
 	int _x, _y;
 	int _width, _height;
-	float _meters;
-	float _alpha;
-	bool _hidden;
 
-	GrabComponent _grab_component;
+	Overlay _overlay;
 
 	vr::Texture_t _texture;
 	GLuint _gl_texture;

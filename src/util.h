@@ -5,8 +5,9 @@
 
 typedef vr::TrackedDeviceIndex_t TrackerID;
 typedef vr::VROverlayHandle_t OverlayID;
+typedef vr::HmdMatrix34_t VRMat;
 
-inline void PrintMat(vr::HmdMatrix34_t m)
+inline void PrintMat(VRMat m)
 {
 	printf("[%.2f, %.2f, %.2f, %.2f]\n", m.m[0][0], m.m[0][1], m.m[0][2], m.m[0][3]);
 	printf("[%.2f, %.2f, %.2f, %.2f]\n", m.m[1][0], m.m[1][1], m.m[1][2], m.m[1][3]);
@@ -21,7 +22,7 @@ inline void PrintMat(glm::mat4x4 m)
 	printf("[%.2f, %.2f, %.2f, %.2f]\n", m[3][0], m[3][1], m[3][2], m[3][3]);
 }
 
-inline glm::mat4x4 ConvertMat(vr::HmdMatrix34_t mat)
+inline glm::mat4x4 ConvertMat(VRMat mat)
 {
 	auto m = mat.m;
 	return glm::mat4x4(
@@ -31,10 +32,10 @@ inline glm::mat4x4 ConvertMat(vr::HmdMatrix34_t mat)
 		m[0][3], m[1][3], m[2][3], 1);
 }
 
-inline vr::HmdMatrix34_t ConvertMat(glm::mat4x4 m)
+inline VRMat ConvertMat(glm::mat4x4 m)
 {
 	// clang-format off
-	return vr::HmdMatrix34_t{{
+	return VRMat{{
 		{m[0][0], m[1][0], m[2][0], m[3][0]},
 		{m[0][1], m[1][1], m[2][1], m[3][1]},
 		{m[0][2], m[1][2], m[2][2], m[3][2]}
@@ -47,7 +48,7 @@ inline glm::vec3 GetPos(glm::mat4x4 mat)
 	return glm::vec3(mat[3][0], mat[3][1], mat[3][2]);
 }
 
-inline glm::vec3 GetPos(vr::HmdMatrix34_t mat)
+inline glm::vec3 GetPos(VRMat mat)
 {
 	return glm::vec3(mat.m[0][3], mat.m[1][3], mat.m[2][3]);
 }
