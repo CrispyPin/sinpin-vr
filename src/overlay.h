@@ -5,6 +5,7 @@
 #include <string>
 
 class App;
+class Controller;
 
 enum class TargetType
 {
@@ -29,7 +30,7 @@ class Overlay
 	OverlayID Id();
 	bool IsHeld();
 	bool IsHidden();
-	TrackerID ActiveHand();
+	Controller *ActiveHand();
 	float Alpha();
 	float Width();
 	float Ratio();
@@ -51,11 +52,11 @@ class Overlay
 
 	float IntersectRay(glm::vec3 origin, glm::vec3 direction, float max_len);
 
-	std::function<void(TrackerID)> _GrabBeginCallback;
-	std::function<void(TrackerID)> _GrabEndCallback;
+	std::function<void(Controller *)> _GrabBeginCallback;
+	std::function<void()> _GrabEndCallback;
 
 	void ControllerRelease();
-	void ControllerGrab(TrackerID controller);
+	void ControllerGrab(Controller *controller);
 
   private:
 	bool _initialized;
@@ -64,12 +65,11 @@ class Overlay
 	OverlayID _id;
 
 	std::string _name;
-	bool _is_held;
 	bool _hidden;
 	float _width_m;
 	float _alpha;
 	float _ratio;
-	TrackerID _active_hand;
+	Controller *_holding_controller;
 
 	Target _target;
 };

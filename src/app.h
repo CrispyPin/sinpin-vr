@@ -1,7 +1,7 @@
 #pragma once
 #define GL_GLEXT_PROTOTYPES
 
-#include "laser.h"
+#include "controller.h"
 #include "overlay.h"
 #include "panel.h"
 #include "util.h"
@@ -39,9 +39,9 @@ class App
 
 	std::vector<TrackerID> GetControllers();
 	glm::mat4 GetTrackerPose(TrackerID tracker);
-	vr::InputDigitalActionData_t GetControllerInputDigital(TrackerID controller, vr::VRActionHandle_t action);
-	vr::InputAnalogActionData_t GetControllerInputAnalog(TrackerID controller, vr::VRActionHandle_t action);
-	bool IsInputJustPressed(TrackerID controller, vr::VRActionHandle_t action);
+	vr::InputDigitalActionData_t GetInputDigital(vr::VRActionHandle_t action, vr::VRInputValueHandle_t controller = 0);
+	vr::InputAnalogActionData_t GetInputAnalog(vr::VRActionHandle_t action, vr::VRInputValueHandle_t controller = 0);
+	bool IsInputJustPressed(vr::VRActionHandle_t action, vr::VRInputValueHandle_t controller = 0);
 	CursorPos GetCursorPosition();
 
 	Ray IntersectRay(glm::vec3 origin, glm::vec3 direction, float max_len);
@@ -63,7 +63,7 @@ class App
 
 	InputHandles _input_handles;
 	vr::TrackedDevicePose_t _tracker_poses[MAX_TRACKERS];
-	std::optional<Laser> _lasers[MAX_TRACKERS];
+	std::optional<Controller> _controllers[2];
 
 	Overlay _root_overlay;
 	std::vector<Panel> _panels;

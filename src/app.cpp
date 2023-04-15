@@ -1,4 +1,5 @@
 #include "app.h"
+#include "controller.h"
 #include "util.h"
 #include <X11/extensions/Xrandr.h>
 #include <cassert>
@@ -13,6 +14,8 @@ App::App()
 	InitGLFW();
 	InitRootOverlay();
 	printf("\n");
+	_controllers[0] = Controller(this, ControllerSide::Left);
+	_controllers[1] = Controller(this, ControllerSide::Right);
 
 	glGenTextures(1, &_gl_frame);
 	glBindTexture(GL_TEXTURE_2D, _gl_frame);
@@ -122,13 +125,13 @@ void App::InitRootOverlay()
 	// clang-format on
 	_root_overlay.SetTransformWorld(&root_start_pose);
 
-	_root_overlay._GrabBeginCallback = [this](TrackerID controller) {
+	_root_overlay._GrabBeginCallback = [this](Controller *controller) {
 		for (auto &panel : _panels)
 		{
 			panel.GetOverlay()->ControllerGrab(controller);
 		}
 	};
-	_root_overlay._GrabEndCallback = [this](TrackerID controller) {
+	_root_overlay._GrabEndCallback = [this]() {
 		for (auto &panel : _panels)
 		{
 			panel.GetOverlay()->ControllerRelease();
@@ -156,44 +159,26 @@ void App::UpdateInput()
 	vr::VRActiveActionSet_t main;
 	main.ulActionSet = _input_handles.set;
 	main.ulRestrictedToDevice = 0;
-	vr_input->UpdateActionState(&main, sizeof(vr::VRActiveActionSet_t), 1);
+	main.nPriority = 10;
+	vr::EVRInputError err = vr_input->UpdateActionState(&main, sizeof(vr::VRActiveActionSet_t), 1);
+	if (err)
+	{
+		printf("Error: (update action state): %d\n", err);
+	}
 
 	vr_sys->GetDeviceToAbsoluteTrackingPose(_tracking_origin, 0, _tracker_poses, MAX_TRACKERS);
 
-	for (unsigned int i = 0; i < MAX_TRACKERS; i++)
+	if (IsInputJustPressed(_input_handles.toggle))
 	{
-		if (IsInputJustPressed(i, _input_handles.toggle))
+		_hidden = !_hidden;
+		_root_overlay.SetHidden(_hidden);
+		for (auto &panel : _panels)
 		{
-			_hidden = !_hidden;
-			_root_overlay.SetHidden(_hidden);
-			for (auto &panel : _panels)
-			{
-				panel.SetHidden(_hidden);
-			}
-			for (auto &laser : _lasers)
-			{
-				if (laser.has_value())
-				{
-					laser->SetHidden(_hidden);
-				}
-			}
-			break;
-		}
-		auto type = vr_sys->GetTrackedDeviceClass(i);
-		if (type == vr::TrackedDeviceClass_Controller)
-		{
-			if (!_lasers[i].has_value())
-			{
-				_lasers[i] = Laser(this, i);
-			}
-			_lasers[i]->SetHidden(_hidden);
-			_lasers[i]->Update();
-		}
-		else if (_lasers[i].has_value())
-		{
-			_lasers[i]->SetHidden(true);
+			panel.SetHidden(_hidden);
 		}
 	}
+	_controllers[0]->Update();
+	_controllers[1]->Update();
 }
 
 void App::UpdateFramebuffer()
@@ -223,23 +208,23 @@ glm::mat4 App::GetTrackerPose(TrackerID tracker)
 	return ConvertMat(_tracker_poses[tracker].mDeviceToAbsoluteTracking);
 }
 
-vr::InputDigitalActionData_t App::GetControllerInputDigital(TrackerID controller, vr::VRActionHandle_t action)
+vr::InputDigitalActionData_t App::GetInputDigital(vr::VRActionHandle_t action, vr::VRInputValueHandle_t controller)
 {
 	vr::InputDigitalActionData_t state;
-	vr_input->GetDigitalActionData(action, &state, sizeof(vr::InputDigitalActionData_t), 0);
+	vr_input->GetDigitalActionData(action, &state, sizeof(vr::InputDigitalActionData_t), controller);
 	return state;
 }
 
-vr::InputAnalogActionData_t App::GetControllerInputAnalog(TrackerID controller, vr::VRActionHandle_t action)
+vr::InputAnalogActionData_t App::GetInputAnalog(vr::VRActionHandle_t action, vr::VRInputValueHandle_t controller)
 {
 	vr::InputAnalogActionData_t state;
-	vr_input->GetAnalogActionData(action, &state, sizeof(vr::InputAnalogActionData_t), 0);
+	vr_input->GetAnalogActionData(action, &state, sizeof(vr::InputAnalogActionData_t), controller);
 	return state;
 }
 
-bool App::IsInputJustPressed(TrackerID controller, vr::VRActionHandle_t action)
+bool App::IsInputJustPressed(vr::VRActionHandle_t action, vr::VRInputValueHandle_t controller)
 {
-	auto data = GetControllerInputDigital(controller, action);
+	auto data = GetInputDigital(action, controller);
 	return data.bState && data.bChanged;
 }
 

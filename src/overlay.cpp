@@ -14,8 +14,7 @@ Overlay::Overlay(App *app, std::string name)
 	_initialized = true;
 	_name = name;
 	_app = app;
-	_is_held = false;
-	_active_hand = 0;
+	_holding_controller = nullptr;
 	_width_m = 1;
 	_ratio = 1;
 
@@ -46,12 +45,12 @@ OverlayID Overlay::Id()
 
 bool Overlay::IsHeld()
 {
-	return _is_held;
+	return _holding_controller != nullptr;
 }
 
-TrackerID Overlay::ActiveHand()
+Controller *Overlay::ActiveHand()
 {
-	return _active_hand;
+	return _holding_controller;
 }
 
 bool Overlay::IsHidden()
@@ -168,13 +167,14 @@ float Overlay::IntersectRay(glm::vec3 origin, glm::vec3 direction, float max_len
 
 glm::mat4x4 Overlay::GetTransformAbsolute()
 {
-	if (_is_held)
+	if (_holding_controller != nullptr)
 	{
 		VRMat pose;
-		auto err = _app->vr_overlay->GetOverlayTransformTrackedDeviceRelative(_id, &_active_hand, &pose);
+		TrackerID tracker;
+		auto err = _app->vr_overlay->GetOverlayTransformTrackedDeviceRelative(_id, &tracker, &pose);
 		assert(err == 0);
 		auto offset = ConvertMat(pose);
-		auto controller = _app->GetTrackerPose(_active_hand);
+		auto controller = _app->GetTrackerPose(_holding_controller->DeviceIndex());
 		return controller * offset;
 	}
 	else
@@ -206,32 +206,31 @@ void Overlay::Update()
 		assert(_initialized);
 	}
 
-	if (_is_held)
+	if (_holding_controller != nullptr)
 	{
-		if (!_app->GetControllerInputDigital(_active_hand, _app->_input_handles.grab).bState)
+		if (!_app->GetInputDigital(_app->_input_handles.grab, _holding_controller->InputHandle()).bState)
 		{
 			ControllerRelease();
 		}
 	}
 }
 
-void Overlay::ControllerGrab(TrackerID controller)
+void Overlay::ControllerGrab(Controller *controller)
 {
 	_app->vr_overlay->SetOverlayColor(_id, 0.6f, 0.8f, 0.8f);
 
 	auto abs_mat = GetTransformAbsolute();
-	auto controller_mat = _app->GetTrackerPose(controller);
+	auto controller_mat = _app->GetTrackerPose(controller->DeviceIndex());
 	VRMat relative_pose = ConvertMat(glm::inverse(controller_mat) * abs_mat);
 
-	_app->vr_overlay->SetOverlayTransformTrackedDeviceRelative(_id, controller, &relative_pose);
+	_app->vr_overlay->SetOverlayTransformTrackedDeviceRelative(_id, controller->DeviceIndex(), &relative_pose);
 
 	if (_GrabBeginCallback != nullptr)
 	{
 		_GrabBeginCallback(controller);
 	}
 
-	_is_held = true;
-	_active_hand = controller;
+	_holding_controller = controller;
 }
 
 void Overlay::ControllerRelease()
@@ -243,8 +242,7 @@ void Overlay::ControllerRelease()
 
 	if (_GrabEndCallback != nullptr)
 	{
-		_GrabEndCallback(_active_hand);
+		_GrabEndCallback();
 	}
-	_is_held = false;
-	_active_hand = -1;
+	_holding_controller = nullptr;
 }
