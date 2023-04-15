@@ -137,7 +137,6 @@ void App::InitRootOverlay()
 			panel.GetOverlay()->ControllerRelease();
 		}
 	};
-	printf("Created root overlay instance\n");
 }
 
 void App::Update()

@@ -52,12 +52,17 @@ void Controller::Update()
 		return;
 
 	auto controller_pose = _app->GetTrackerPose(_device_index);
-	auto origin = GetPos(controller_pose);
+	auto controller_pos = GetPos(controller_pose);
 	auto forward = -glm::vec3(controller_pose[2]);
-	auto ray = _app->IntersectRay(origin, forward, 5.0f);
+	auto ray = _app->IntersectRay(controller_pos, forward, 5.0f);
 	float len = ray.distance;
 
-	VRMat transform = {{{width, 0, 0, 0}, {0, 0, width, 0}, {0, len, 0, len * -0.5f}}};
+	auto hmd_global_pos = GetPos(_app->GetTrackerPose(0));
+	auto hmd_local_pos = glm::inverse(controller_pose) * glm::vec4(hmd_global_pos - controller_pos, 0);
+	hmd_local_pos.z = 0;
+	auto hmd_dir = glm::normalize(hmd_local_pos);
+
+	VRMat transform = {{{width * hmd_dir.y, 0, width * hmd_dir.x, 0}, {width * -hmd_dir.x, 0, width * hmd_dir.y, 0}, {0, len, 0, len * -0.5f}}};
 	_laser.SetTransformTracker(_device_index, &transform);
 
 	if (ray.overlay != nullptr)
