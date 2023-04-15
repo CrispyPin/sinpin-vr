@@ -1,6 +1,8 @@
 #include "app.h"
+#include "util.h"
 #include <X11/extensions/Xrandr.h>
 #include <cassert>
+#include <glm/matrix.hpp>
 
 App::App()
 {
@@ -156,9 +158,9 @@ void App::UpdateInput()
 	main.ulRestrictedToDevice = 0;
 	vr_input->UpdateActionState(&main, sizeof(vr::VRActiveActionSet_t), 1);
 
-	vr_sys->GetDeviceToAbsoluteTrackingPose(_tracking_origin, 0, _tracker_poses, vr::k_unMaxTrackedDeviceCount);
+	vr_sys->GetDeviceToAbsoluteTrackingPose(_tracking_origin, 0, _tracker_poses, MAX_TRACKERS);
 
-	for (unsigned int i = 0; i < vr::k_unMaxTrackedDeviceCount; i++)
+	for (unsigned int i = 0; i < MAX_TRACKERS; i++)
 	{
 		if (IsInputJustPressed(i, _input_handles.toggle))
 		{
@@ -168,7 +170,28 @@ void App::UpdateInput()
 			{
 				panel.SetHidden(_hidden);
 			}
+			for (auto &laser : _lasers)
+			{
+				if (laser.has_value())
+				{
+					laser->SetHidden(_hidden);
+				}
+			}
 			break;
+		}
+		auto type = vr_sys->GetTrackedDeviceClass(i);
+		if (type == vr::TrackedDeviceClass_Controller)
+		{
+			if (!_lasers[i].has_value())
+			{
+				_lasers[i] = Laser(this, i);
+			}
+			_lasers[i]->SetHidden(_hidden);
+			_lasers[i]->Update();
+		}
+		else if (_lasers[i].has_value())
+		{
+			_lasers[i]->SetHidden(true);
 		}
 	}
 }
@@ -218,6 +241,32 @@ bool App::IsInputJustPressed(TrackerID controller, vr::VRActionHandle_t action)
 {
 	auto data = GetControllerInputDigital(controller, action);
 	return data.bState && data.bChanged;
+}
+
+Ray App::IntersectRay(glm::vec3 origin, glm::vec3 direction, float max_len)
+{
+	Ray ray;
+	ray.distance = max_len;
+	ray.overlay = nullptr;
+	{
+		float root_dist = _root_overlay.IntersectRay(origin, direction, max_len);
+		if (root_dist < ray.distance)
+		{
+			ray.distance = root_dist;
+			ray.overlay = &_root_overlay;
+		}
+	}
+
+	for (auto &panel : _panels)
+	{
+		float dist = panel.GetOverlay()->IntersectRay(origin, direction, max_len);
+		if (dist < ray.distance)
+		{
+			ray.distance = dist;
+			ray.overlay = panel.GetOverlay();
+		}
+	}
+	return ray;
 }
 
 CursorPos App::GetCursorPosition()

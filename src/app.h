@@ -1,12 +1,14 @@
 #pragma once
 #define GL_GLEXT_PROTOTYPES
 
+#include "laser.h"
 #include "overlay.h"
 #include "panel.h"
 #include "util.h"
 #include <GLFW/glfw3.h>
 #include <X11/Xutil.h>
 #include <filesystem>
+#include <optional>
 #include <vector>
 
 struct CursorPos
@@ -22,6 +24,12 @@ struct InputHandles
 	vr::VRActionHandle_t grab;
 };
 
+struct Ray
+{
+	Overlay *overlay;
+	float distance;
+};
+
 class App
 {
   public:
@@ -35,6 +43,8 @@ class App
 	vr::InputAnalogActionData_t GetControllerInputAnalog(TrackerID controller, vr::VRActionHandle_t action);
 	bool IsInputJustPressed(TrackerID controller, vr::VRActionHandle_t action);
 	CursorPos GetCursorPosition();
+
+	Ray IntersectRay(glm::vec3 origin, glm::vec3 direction, float max_len);
 
 	Display *_xdisplay;
 	Window _root_window;
@@ -52,7 +62,8 @@ class App
 	vr::IVRInput *vr_input;
 
 	InputHandles _input_handles;
-	vr::TrackedDevicePose_t _tracker_poses[vr::k_unMaxTrackedDeviceCount];
+	vr::TrackedDevicePose_t _tracker_poses[MAX_TRACKERS];
+	std::optional<Laser> _lasers[MAX_TRACKERS];
 
 	Overlay _root_overlay;
 	std::vector<Panel> _panels;

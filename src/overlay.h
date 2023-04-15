@@ -30,19 +30,26 @@ class Overlay
 	bool IsHeld();
 	bool IsHidden();
 	TrackerID ActiveHand();
-	float Width();
 	float Alpha();
+	float Width();
+	float Ratio();
 
 	void SetWidth(float meters);
 	void SetHidden(bool state);
 	void SetAlpha(float alpha);
+	void SetRatio(float ratio);
 	void SetTexture(vr::Texture_t *texture);
+	void SetTextureToColor(uint8_t r, uint8_t g, uint8_t b);
 
-	void SetTransformTracker(TrackerID tracker, VRMat *transform);
-	void SetTransformWorld(VRMat *transform);
+	glm::mat4x4 GetTransformAbsolute();
+
+	void SetTransformTracker(TrackerID tracker, const VRMat *transform);
+	void SetTransformWorld(const VRMat *transform);
 
 	// void SetTargetTracker(TrackerID tracker);
 	void SetTargetWorld();
+
+	float IntersectRay(glm::vec3 origin, glm::vec3 direction, float max_len);
 
 	std::function<void(TrackerID)> _GrabBeginCallback;
 	std::function<void(TrackerID)> _GrabEndCallback;
@@ -51,8 +58,6 @@ class Overlay
 	void ControllerGrab(TrackerID controller);
 
   private:
-	glm::mat4x4 GetTransformAbsolute();
-
 	bool _initialized;
 
 	App *_app;
@@ -63,6 +68,7 @@ class Overlay
 	bool _hidden;
 	float _width_m;
 	float _alpha;
+	float _ratio;
 	TrackerID _active_hand;
 
 	Target _target;

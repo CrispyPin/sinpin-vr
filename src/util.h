@@ -7,6 +7,9 @@ typedef vr::TrackedDeviceIndex_t TrackerID;
 typedef vr::VROverlayHandle_t OverlayID;
 typedef vr::HmdMatrix34_t VRMat;
 
+const VRMat VRMatIdentity{{{1, 0, 0, 0}, {0, 1, 0, 0}, {0, 0, 1, 0}}};
+const int MAX_TRACKERS = vr::k_unMaxTrackedDeviceCount;
+
 inline void PrintMat(VRMat m)
 {
 	printf("[%.2f, %.2f, %.2f, %.2f]\n", m.m[0][0], m.m[0][1], m.m[0][2], m.m[0][3]);

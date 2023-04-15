@@ -1,6 +1,7 @@
 #include "overlay.h"
 #include "app.h"
 #include "util.h"
+#include <cstdint>
 #include <glm/fwd.hpp>
 
 Overlay::Overlay()
@@ -16,6 +17,7 @@ Overlay::Overlay(App *app, std::string name)
 	_is_held = false;
 	_active_hand = 0;
 	_width_m = 1;
+	_ratio = 1;
 
 	_target.type = TargetType::World;
 
@@ -33,7 +35,8 @@ Overlay::Overlay(App *app, std::string name)
 	// (flipping uv on y axis because opengl and xorg are opposite)
 	vr::VRTextureBounds_t bounds{0, 1, 1, 0};
 	_app->vr_overlay->SetOverlayTextureBounds(_id, &bounds);
-	SetHidden(false);
+	_hidden = false;
+	_app->vr_overlay->ShowOverlay(_id);
 }
 
 OverlayID Overlay::Id()
@@ -66,6 +69,11 @@ float Overlay::Width()
 	return _width_m;
 }
 
+float Overlay::Ratio()
+{
+	return _ratio;
+}
+
 void Overlay::SetWidth(float width_meters)
 {
 	_width_m = width_meters;
@@ -74,11 +82,14 @@ void Overlay::SetWidth(float width_meters)
 
 void Overlay::SetHidden(bool state)
 {
-	_hidden = state;
-	if (_hidden)
-		_app->vr_overlay->HideOverlay(_id);
-	else
-		_app->vr_overlay->ShowOverlay(_id);
+	if (state != _hidden)
+	{
+		_hidden = state;
+		if (_hidden)
+			_app->vr_overlay->HideOverlay(_id);
+		else
+			_app->vr_overlay->ShowOverlay(_id);
+	}
 }
 
 void Overlay::SetAlpha(float alpha)
@@ -87,13 +98,25 @@ void Overlay::SetAlpha(float alpha)
 	_app->vr_overlay->SetOverlayAlpha(_id, alpha);
 }
 
+void Overlay::SetRatio(float ratio)
+{
+	_ratio = ratio;
+}
+
 void Overlay::SetTexture(vr::Texture_t *texture)
 {
 	auto set_texture_err = _app->vr_overlay->SetOverlayTexture(_id, texture);
 	assert(set_texture_err == 0);
 }
 
-void Overlay::SetTransformTracker(TrackerID tracker, VRMat *transform)
+void Overlay::SetTextureToColor(uint8_t r, uint8_t g, uint8_t b)
+{
+	uint8_t col[4] = {r, g, b, 255};
+	auto set_texture_err = _app->vr_overlay->SetOverlayRaw(_id, &col, 1, 1, 4);
+	assert(set_texture_err == 0);
+}
+
+void Overlay::SetTransformTracker(TrackerID tracker, const VRMat *transform)
 {
 	_app->vr_overlay->SetOverlayTransformTrackedDeviceRelative(_id, tracker, transform);
 	_target.type = TargetType::Tracker;
@@ -101,7 +124,7 @@ void Overlay::SetTransformTracker(TrackerID tracker, VRMat *transform)
 	_target.transform = *transform;
 }
 
-void Overlay::SetTransformWorld(VRMat *transform)
+void Overlay::SetTransformWorld(const VRMat *transform)
 {
 	_app->vr_overlay->SetOverlayTransformAbsolute(_id, vr::TrackingUniverseStanding, transform);
 	_target.type = TargetType::World;
@@ -113,6 +136,34 @@ void Overlay::SetTargetWorld()
 	auto abs_pose = ConvertMat(GetTransformAbsolute());
 	_app->vr_overlay->SetOverlayTransformAbsolute(_id, vr::TrackingUniverseStanding, &abs_pose);
 	_target.type = TargetType::World;
+}
+
+float Overlay::IntersectRay(glm::vec3 origin, glm::vec3 direction, float max_len)
+{
+	float closest_dist = max_len;
+	auto end = origin + direction * max_len;
+
+	auto panel_transform = GetTransformAbsolute();
+	auto panel_pos = GetPos(panel_transform);
+	auto a = glm::inverse(panel_transform) * glm::vec4(origin - panel_pos, 0);
+	auto b = glm::inverse(panel_transform) * glm::vec4(end - panel_pos, 0);
+	float r = a.z / (a.z - b.z);
+	auto p = a + (b - a) * r;
+	// printf("panel pos: (%.2f,%.2f,%.2f)\n", panel_pos.x, panel_pos.y, panel_pos.z);
+	// printf("a: (%.2f,%.2f,%.2f)\n", a.x, a.y, a.z);
+	// printf("b: (%.2f,%.2f,%.2f)\n", b.x, b.y, b.z);
+	// printf("r: %.2f\n", r);
+	// printf("p: (%.2f,%.2f,%.2f)\n", p.x, p.y, p.z);
+
+	if (b.z < a.z && b.z < 0 && glm::abs(p.x) < (_width_m * 0.5f) && glm::abs(p.y) < (_width_m * 0.5f * _ratio))
+	{
+		float dist = r * max_len;
+		if (dist < closest_dist)
+		{
+			closest_dist = dist;
+		}
+	}
+	return closest_dist;
 }
 
 glm::mat4x4 Overlay::GetTransformAbsolute()
@@ -155,30 +206,7 @@ void Overlay::Update()
 		assert(_initialized);
 	}
 
-	if (!_is_held)
-	{
-		for (auto controller : _app->GetControllers())
-		{
-			if (_app->IsInputJustPressed(controller, _app->_input_handles.grab))
-			{
-				auto overlay_pose = GetTransformAbsolute();
-				auto controller_pos = GetPos(_app->GetTrackerPose(controller));
-
-				auto local_pos = glm::inverse(overlay_pose) * glm::vec4(controller_pos - GetPos(overlay_pose), 0);
-
-				float grab_area_thickness = 0.3f;
-				bool close_enough = glm::abs(local_pos.z) < grab_area_thickness;
-				close_enough &= glm::abs(local_pos.x) < _width_m / 2.0f;
-				close_enough &= glm::abs(local_pos.y) < _width_m / 2.0f;
-
-				if (close_enough)
-				{
-					ControllerGrab(controller);
-				}
-			}
-		}
-	}
-	else
+	if (_is_held)
 	{
 		if (!_app->GetControllerInputDigital(_active_hand, _app->_input_handles.grab).bState)
 		{
