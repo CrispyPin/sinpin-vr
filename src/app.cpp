@@ -8,6 +8,7 @@
 App::App()
 {
 	_tracking_origin = vr::TrackingUniverseStanding;
+	_frames_since_framebuffer = 999;
 
 	InitOVR();
 	InitX11();
@@ -152,6 +153,7 @@ void App::Update()
 			panel.Update();
 		}
 	}
+	_frames_since_framebuffer += 1;
 }
 
 void App::UpdateInput()
@@ -185,6 +187,11 @@ void App::UpdateInput()
 
 void App::UpdateFramebuffer()
 {
+	if (_frames_since_framebuffer < 2)
+	{
+		return;
+	}
+	_frames_since_framebuffer = 0;
 	auto frame = XGetImage(
 		_xdisplay,
 		_root_window,

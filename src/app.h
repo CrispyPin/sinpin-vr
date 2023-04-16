@@ -50,6 +50,7 @@ class App
 	Window _root_window;
 	GLFWwindow *_gl_window;
 	GLuint _gl_frame;
+	int _frames_since_framebuffer;
 
 	int _root_width;
 	int _root_height;
