@@ -98,7 +98,7 @@ void Controller::Update()
 
 	if (!_grabbed_overlays.empty())
 	{
-		float move = _app->GetInputAnalog(_app->_input_handles.distance).y * 0.1; // TODO use frame time
+		float move = _app->GetInputAnalog(_app->_input_handles.distance, _input_handle).y * 0.1; // TODO use frame time
 		if (move != 0.0f)
 		{
 			// delta is calculated & clamped for first overlay so that child overlays don't move further than the root
@@ -108,8 +108,9 @@ void Controller::Update()
 
 			for (auto overlay : _grabbed_overlays)
 			{
-				overlay->GetTarget()->transform.m[2][3] += real_delta;
-				_app->vr_overlay->SetOverlayTransformTrackedDeviceRelative(overlay->Id(), _device_index, &overlay->GetTarget()->transform);
+				auto transform = overlay->GetTarget()->transform;
+				transform.m[2][3] += real_delta;
+				overlay->SetTransformTracker(_device_index, &transform);
 			}
 		}
 	}

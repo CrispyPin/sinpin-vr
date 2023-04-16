@@ -16,25 +16,18 @@ Overlay::Overlay(App *app, std::string name)
 	_holding_controller = nullptr;
 	_width_m = 1;
 	_ratio = 1;
+	_hidden = false;
 
-	_target.type = TargetType::World;
+	_target = Target{.type = TargetType::World, .transform = VRMatIdentity};
 
 	auto overlay_create_err = _app->vr_overlay->CreateOverlay(_name.c_str(), _name.c_str(), &_id);
 	assert(overlay_create_err == 0);
-	{
-		vr::ETrackingUniverseOrigin origin;
-		_app->vr_overlay->GetOverlayTransformAbsolute(_id, &origin, &_target.transform);
-	}
-
-	uint8_t col[4] = {20, 50, 50, 255};
-	_app->vr_overlay->SetOverlayRaw(_id, &col, 1, 1, 4);
-	printf("Created overlay instance %s\n", _name.c_str());
 
 	// (flipping uv on y axis because opengl and xorg are opposite)
 	vr::VRTextureBounds_t bounds{0, 1, 1, 0};
 	_app->vr_overlay->SetOverlayTextureBounds(_id, &bounds);
-	_hidden = false;
 	_app->vr_overlay->ShowOverlay(_id);
+	printf("Created overlay instance %s\n", _name.c_str());
 }
 
 OverlayID Overlay::Id()
@@ -132,8 +125,7 @@ void Overlay::SetTransformWorld(const VRMat *transform)
 void Overlay::SetTargetWorld()
 {
 	auto abs_pose = ConvertMat(GetTransformAbsolute());
-	_app->vr_overlay->SetOverlayTransformAbsolute(_id, vr::TrackingUniverseStanding, &abs_pose);
-	_target.type = TargetType::World;
+	SetTransformWorld(&abs_pose);
 }
 
 Ray Overlay::IntersectRay(glm::vec3 origin, glm::vec3 direction, float max_len)
@@ -161,7 +153,7 @@ Ray Overlay::IntersectRay(glm::vec3 origin, glm::vec3 direction, float max_len)
 			closest_dist = dist;
 		}
 	}
-	return Ray{.overlay = this, .distance = closest_dist /* , .pos = p */};
+	return Ray{.overlay = this, .distance = closest_dist};
 }
 
 glm::mat4x4 Overlay::GetTransformAbsolute()
@@ -221,14 +213,18 @@ void Overlay::Update()
 
 void Overlay::ControllerGrab(Controller *controller)
 {
+	if (_holding_controller != nullptr)
+	{
+		_holding_controller->ReleaseOverlay(this);
+	}
+
 	_app->vr_overlay->SetOverlayColor(_id, 0.6f, 0.8f, 0.8f);
 
 	auto abs_mat = GetTransformAbsolute();
 	auto controller_mat = _app->GetTrackerPose(controller->DeviceIndex());
 	VRMat relative_pose = ConvertMat(glm::inverse(controller_mat) * abs_mat);
 
-	_app->vr_overlay->SetOverlayTransformTrackedDeviceRelative(_id, controller->DeviceIndex(), &relative_pose);
-	_target.transform = relative_pose;
+	SetTransformTracker(controller->DeviceIndex(), &relative_pose);
 
 	controller->RegisterGrabbedOverlay(this);
 	if (_GrabBeginCallback != nullptr)
@@ -241,11 +237,14 @@ void Overlay::ControllerGrab(Controller *controller)
 
 void Overlay::ControllerRelease()
 {
-	_holding_controller->ReleaseOverlay(this);
+	if (_holding_controller != nullptr)
+	{
+		_holding_controller->ReleaseOverlay(this);
+	}
 	_app->vr_overlay->SetOverlayColor(_id, 1.0f, 1.0f, 1.0f);
 
 	auto new_pose = ConvertMat(GetTransformAbsolute());
-	_app->vr_overlay->SetOverlayTransformAbsolute(_id, _app->_tracking_origin, &new_pose);
+	SetTransformWorld(&new_pose);
 
 	if (_GrabEndCallback != nullptr)
 	{

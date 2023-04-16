@@ -23,6 +23,7 @@ Panel::Panel(App *app, int index, int x, int y, int width, int height)
 	_texture.eType = vr::TextureType_OpenGL;
 	_texture.handle = (void *)(uintptr_t)_gl_texture;
 	_overlay.SetRatio(height / (float)width);
+	_overlay.SetTextureToColor(50, 20, 50);
 }
 
 void Panel::Update()

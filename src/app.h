@@ -28,7 +28,6 @@ struct Ray
 {
 	Overlay *overlay;
 	float distance;
-	// glm::vec3 pos;
 };
 
 class App
