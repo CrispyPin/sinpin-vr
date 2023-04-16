@@ -12,6 +12,7 @@ Controller::Controller(App *app, ControllerSide side)
 	_input_handle = 0;
 	_is_connected = false;
 	_side = side;
+	_hidden = false;
 
 	std::string laser_name = "controller_laser_";
 	if (side == ControllerSide::Left)
@@ -45,6 +46,28 @@ bool Controller::IsConnected()
 	return _is_connected;
 }
 
+void Controller::SetHidden(bool state)
+{
+	_hidden = state;
+}
+
+void Controller::RegisterGrabbedOverlay(Overlay *overlay)
+{
+	_grabbed_overlays.push_back(overlay);
+}
+
+void Controller::ReleaseOverlay(Overlay *overlay)
+{
+	for (auto i = _grabbed_overlays.begin(); i != _grabbed_overlays.end(); i++)
+	{
+		if (*i == overlay)
+		{
+			_grabbed_overlays.erase(i);
+			break;
+		}
+	}
+}
+
 void Controller::Update()
 {
 	UpdateStatus();
@@ -72,6 +95,24 @@ void Controller::Update()
 			ray.overlay->ControllerGrab(this);
 		}
 	}
+
+	if (!_grabbed_overlays.empty())
+	{
+		float move = _app->GetInputAnalog(_app->_input_handles.distance).y * 0.1; // TODO use frame time
+		if (move != 0.0f)
+		{
+			// delta is calculated & clamped for first overlay so that child overlays don't move further than the root
+			float main_z = _grabbed_overlays[0]->GetTarget()->transform.m[2][3];
+			float new_main_z = glm::clamp(main_z - move, -5.0f, -0.1f);
+			float real_delta = new_main_z - main_z;
+
+			for (auto overlay : _grabbed_overlays)
+			{
+				overlay->GetTarget()->transform.m[2][3] += real_delta;
+				_app->vr_overlay->SetOverlayTransformTrackedDeviceRelative(overlay->Id(), _device_index, &overlay->GetTarget()->transform);
+			}
+		}
+	}
 }
 
 void Controller::UpdateStatus()
@@ -91,5 +132,5 @@ void Controller::UpdateStatus()
 		_device_index = _app->vr_sys->GetTrackedDeviceIndexForControllerRole(vr::TrackedControllerRole_RightHand);
 	}
 	_is_connected &= _device_index < MAX_TRACKERS;
-	_laser.SetHidden(!_is_connected);
+	_laser.SetHidden(!_is_connected || _hidden);
 }

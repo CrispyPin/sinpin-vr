@@ -2,7 +2,6 @@
 #include "app.h"
 #include "util.h"
 #include <cstdint>
-#include <glm/fwd.hpp>
 
 Overlay::Overlay()
 {
@@ -137,7 +136,7 @@ void Overlay::SetTargetWorld()
 	_target.type = TargetType::World;
 }
 
-float Overlay::IntersectRay(glm::vec3 origin, glm::vec3 direction, float max_len)
+Ray Overlay::IntersectRay(glm::vec3 origin, glm::vec3 direction, float max_len)
 {
 	float closest_dist = max_len;
 	auto end = origin + direction * max_len;
@@ -162,7 +161,7 @@ float Overlay::IntersectRay(glm::vec3 origin, glm::vec3 direction, float max_len
 			closest_dist = dist;
 		}
 	}
-	return closest_dist;
+	return Ray{.overlay = this, .distance = closest_dist /* , .pos = p */};
 }
 
 glm::mat4x4 Overlay::GetTransformAbsolute()
@@ -198,6 +197,11 @@ glm::mat4x4 Overlay::GetTransformAbsolute()
 	}
 }
 
+Target *Overlay::GetTarget()
+{
+	return &_target;
+}
+
 void Overlay::Update()
 {
 	if (!_initialized)
@@ -224,7 +228,9 @@ void Overlay::ControllerGrab(Controller *controller)
 	VRMat relative_pose = ConvertMat(glm::inverse(controller_mat) * abs_mat);
 
 	_app->vr_overlay->SetOverlayTransformTrackedDeviceRelative(_id, controller->DeviceIndex(), &relative_pose);
+	_target.transform = relative_pose;
 
+	controller->RegisterGrabbedOverlay(this);
 	if (_GrabBeginCallback != nullptr)
 	{
 		_GrabBeginCallback(controller);
@@ -235,6 +241,7 @@ void Overlay::ControllerGrab(Controller *controller)
 
 void Overlay::ControllerRelease()
 {
+	_holding_controller->ReleaseOverlay(this);
 	_app->vr_overlay->SetOverlayColor(_id, 1.0f, 1.0f, 1.0f);
 
 	auto new_pose = ConvertMat(GetTransformAbsolute());

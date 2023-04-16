@@ -1,6 +1,7 @@
 #pragma once
 #include "overlay.h"
 #include "util.h"
+#include <vector>
 
 class App;
 
@@ -20,6 +21,11 @@ class Controller
 
 	bool IsConnected();
 
+	void SetHidden(bool state);
+
+	void RegisterGrabbedOverlay(Overlay *overlay);
+	void ReleaseOverlay(Overlay *overlay);
+
 	void Update();
 	void UpdateStatus();
 
@@ -30,4 +36,6 @@ class Controller
 	TrackerID _device_index;
 	vr::VRInputValueHandle_t _input_handle;
 	bool _is_connected;
+	bool _hidden;
+	std::vector<Overlay *> _grabbed_overlays;
 };

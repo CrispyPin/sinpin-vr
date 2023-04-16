@@ -5,6 +5,7 @@
 #include <string>
 
 class App;
+struct Ray;
 class Controller;
 
 enum class TargetType
@@ -43,6 +44,7 @@ class Overlay
 	void SetTextureToColor(uint8_t r, uint8_t g, uint8_t b);
 
 	glm::mat4x4 GetTransformAbsolute();
+	Target *GetTarget();
 
 	void SetTransformTracker(TrackerID tracker, const VRMat *transform);
 	void SetTransformWorld(const VRMat *transform);
@@ -50,7 +52,7 @@ class Overlay
 	// void SetTargetTracker(TrackerID tracker);
 	void SetTargetWorld();
 
-	float IntersectRay(glm::vec3 origin, glm::vec3 direction, float max_len);
+	Ray IntersectRay(glm::vec3 origin, glm::vec3 direction, float max_len);
 
 	std::function<void(Controller *)> _GrabBeginCallback;
 	std::function<void()> _GrabEndCallback;

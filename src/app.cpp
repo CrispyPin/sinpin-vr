@@ -115,7 +115,7 @@ void App::InitGLFW()
 void App::InitRootOverlay()
 {
 	_root_overlay = Overlay(this, "root");
-	_root_overlay.SetAlpha(0.2f);
+	_root_overlay.SetAlpha(0.5f);
 	// clang-format off
 	VRMat root_start_pose = {{
 		{0.25f,	0.0f,	0.0f, 0},
@@ -124,6 +124,7 @@ void App::InitRootOverlay()
 	}};
 	// clang-format on
 	_root_overlay.SetTransformWorld(&root_start_pose);
+	_root_overlay.SetTextureToColor(110, 30, 190);
 
 	_root_overlay._GrabBeginCallback = [this](Controller *controller) {
 		for (auto &panel : _panels)
@@ -175,6 +176,8 @@ void App::UpdateInput()
 		{
 			panel.SetHidden(_hidden);
 		}
+		_controllers[0]->SetHidden(_hidden);
+		_controllers[1]->SetHidden(_hidden);
 	}
 	_controllers[0]->Update();
 	_controllers[1]->Update();
@@ -232,22 +235,19 @@ Ray App::IntersectRay(glm::vec3 origin, glm::vec3 direction, float max_len)
 	Ray ray;
 	ray.distance = max_len;
 	ray.overlay = nullptr;
+
+	auto r_root = _root_overlay.IntersectRay(origin, direction, max_len);
+	if (r_root.distance < ray.distance)
 	{
-		float root_dist = _root_overlay.IntersectRay(origin, direction, max_len);
-		if (root_dist < ray.distance)
-		{
-			ray.distance = root_dist;
-			ray.overlay = &_root_overlay;
-		}
+		ray = r_root;
 	}
 
 	for (auto &panel : _panels)
 	{
-		float dist = panel.GetOverlay()->IntersectRay(origin, direction, max_len);
-		if (dist < ray.distance)
+		auto r_panel = panel.GetOverlay()->IntersectRay(origin, direction, max_len);
+		if (r_panel.distance < ray.distance)
 		{
-			ray.distance = dist;
-			ray.overlay = panel.GetOverlay();
+			ray = r_panel;
 		}
 	}
 	return ray;
