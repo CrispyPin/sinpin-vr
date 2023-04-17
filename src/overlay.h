@@ -3,6 +3,7 @@
 #include "util.h"
 #include <functional>
 #include <string>
+#include <vector>
 
 class App;
 struct Ray;
@@ -49,16 +50,16 @@ class Overlay
 	void SetTransformTracker(TrackerID tracker, const VRMat *transform);
 	void SetTransformWorld(const VRMat *transform);
 
-	// void SetTargetTracker(TrackerID tracker);
+	void SetTargetTracker(TrackerID tracker);
 	void SetTargetWorld();
 
 	Ray IntersectRay(glm::vec3 origin, glm::vec3 direction, float max_len);
 
-	std::function<void(Controller *)> _GrabBeginCallback;
-	std::function<void()> _GrabEndCallback;
-
 	void ControllerRelease();
 	void ControllerGrab(Controller *controller);
+
+	void AddChildOverlay(Overlay *child);
+	void RemoveChildOverlay(Overlay *child);
 
   private:
 	bool _initialized;
@@ -72,6 +73,8 @@ class Overlay
 	float _alpha;
 	float _ratio;
 	Controller *_holding_controller;
+
+	std::vector<Overlay *> _children;
 
 	Target _target;
 };

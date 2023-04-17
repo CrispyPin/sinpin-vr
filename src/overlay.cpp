@@ -109,10 +109,21 @@ void Overlay::SetTextureToColor(uint8_t r, uint8_t g, uint8_t b)
 
 void Overlay::SetTransformTracker(TrackerID tracker, const VRMat *transform)
 {
+	auto original_pose = _target.transform;
 	_app->vr_overlay->SetOverlayTransformTrackedDeviceRelative(_id, tracker, transform);
 	_target.type = TargetType::Tracker;
 	_target.id = tracker;
 	_target.transform = *transform;
+
+	auto relative_transform = ConvertMat(*transform) * glm::inverse(ConvertMat(original_pose));
+	for (auto child : _children)
+	{
+		if (!child->IsHeld() && child->_target.type == TargetType::Tracker)
+		{
+			VRMat local_transform = ConvertMat(relative_transform * ConvertMat(child->_target.transform));
+			child->SetTransformTracker(tracker, &local_transform);
+		}
+	}
 }
 
 void Overlay::SetTransformWorld(const VRMat *transform)
@@ -120,6 +131,14 @@ void Overlay::SetTransformWorld(const VRMat *transform)
 	_app->vr_overlay->SetOverlayTransformAbsolute(_id, vr::TrackingUniverseStanding, transform);
 	_target.type = TargetType::World;
 	_target.transform = *transform;
+}
+
+void Overlay::SetTargetTracker(TrackerID tracker)
+{
+	auto abs_mat = GetTransformAbsolute();
+	auto controller_mat = _app->GetTrackerPose(tracker);
+	VRMat relative_pose = ConvertMat(glm::inverse(controller_mat) * abs_mat);
+	SetTransformTracker(tracker, &relative_pose);
 }
 
 void Overlay::SetTargetWorld()
@@ -213,25 +232,16 @@ void Overlay::Update()
 
 void Overlay::ControllerGrab(Controller *controller)
 {
-	if (_holding_controller != nullptr)
-	{
-		_holding_controller->ReleaseOverlay(this);
-	}
-
 	_app->vr_overlay->SetOverlayColor(_id, 0.6f, 0.8f, 0.8f);
+	SetTargetTracker(controller->DeviceIndex());
 
-	auto abs_mat = GetTransformAbsolute();
-	auto controller_mat = _app->GetTrackerPose(controller->DeviceIndex());
-	VRMat relative_pose = ConvertMat(glm::inverse(controller_mat) * abs_mat);
-
-	SetTransformTracker(controller->DeviceIndex(), &relative_pose);
-
-	controller->RegisterGrabbedOverlay(this);
-	if (_GrabBeginCallback != nullptr)
+	for (auto child : _children)
 	{
-		_GrabBeginCallback(controller);
+		if (!child->IsHeld()) // overlay may have been picked up by other controller
+		{
+			child->SetTargetTracker(controller->DeviceIndex());
+		}
 	}
-
 	_holding_controller = controller;
 }
 
@@ -239,16 +249,34 @@ void Overlay::ControllerRelease()
 {
 	if (_holding_controller != nullptr)
 	{
-		_holding_controller->ReleaseOverlay(this);
+		_holding_controller->ReleaseOverlay();
 	}
 	_app->vr_overlay->SetOverlayColor(_id, 1.0f, 1.0f, 1.0f);
 
-	auto new_pose = ConvertMat(GetTransformAbsolute());
-	SetTransformWorld(&new_pose);
-
-	if (_GrabEndCallback != nullptr)
+	SetTargetWorld();
+	for (auto child : _children)
 	{
-		_GrabEndCallback();
+		if (!child->IsHeld()) // overlay may have been picked up by other controller
+		{
+			child->SetTargetWorld();
+		}
 	}
 	_holding_controller = nullptr;
+}
+
+void Overlay::AddChildOverlay(Overlay *overlay)
+{
+	_children.push_back(overlay);
+}
+
+void Overlay::RemoveChildOverlay(Overlay *overlay)
+{
+	for (auto i = _children.begin(); i != _children.end(); i++)
+	{
+		if (*i == overlay)
+		{
+			_children.erase(i);
+			break;
+		}
+	}
 }

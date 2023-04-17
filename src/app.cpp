@@ -46,6 +46,11 @@ App::App()
 		_panels[i].GetOverlay()->SetWidth(width);
 	}
 
+	for (auto &panel : _panels)
+	{
+		_root_overlay.AddChildOverlay(panel.GetOverlay());
+	}
+
 	{ // initialize SteamVR input
 		auto exe_path = std::filesystem::read_symlink("/proc/self/exe");
 		_actions_path = exe_path.parent_path().string() + "/bindings/action_manifest.json";
@@ -126,19 +131,6 @@ void App::InitRootOverlay()
 	// clang-format on
 	_root_overlay.SetTransformWorld(&root_start_pose);
 	_root_overlay.SetTextureToColor(110, 30, 190);
-
-	_root_overlay._GrabBeginCallback = [this](Controller *controller) {
-		for (auto &panel : _panels)
-		{
-			panel.GetOverlay()->ControllerGrab(controller);
-		}
-	};
-	_root_overlay._GrabEndCallback = [this]() {
-		for (auto &panel : _panels)
-		{
-			panel.GetOverlay()->ControllerRelease();
-		}
-	};
 }
 
 void App::Update()

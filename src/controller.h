@@ -23,13 +23,14 @@ class Controller
 
 	void SetHidden(bool state);
 
-	void RegisterGrabbedOverlay(Overlay *overlay);
-	void ReleaseOverlay(Overlay *overlay);
+	void ReleaseOverlay();
 
 	void Update();
-	void UpdateStatus();
 
   private:
+	void UpdateStatus();
+	void UpdateLaser();
+
 	App *_app;
 	Overlay _laser;
 	ControllerSide _side;
@@ -37,5 +38,5 @@ class Controller
 	vr::VRInputValueHandle_t _input_handle;
 	bool _is_connected;
 	bool _hidden;
-	std::vector<Overlay *> _grabbed_overlays;
+	Overlay *_grabbed_overlay;
 };

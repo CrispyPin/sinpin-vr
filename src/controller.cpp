@@ -8,6 +8,7 @@ const float width = 0.004f;
 
 Controller::Controller(App *app, ControllerSide side)
 {
+	_grabbed_overlay = nullptr;
 	_app = app;
 	_input_handle = 0;
 	_is_connected = false;
@@ -51,29 +52,30 @@ void Controller::SetHidden(bool state)
 	_hidden = state;
 }
 
-void Controller::RegisterGrabbedOverlay(Overlay *overlay)
+void Controller::ReleaseOverlay()
 {
-	_grabbed_overlays.push_back(overlay);
-}
-
-void Controller::ReleaseOverlay(Overlay *overlay)
-{
-	for (auto i = _grabbed_overlays.begin(); i != _grabbed_overlays.end(); i++)
-	{
-		if (*i == overlay)
-		{
-			_grabbed_overlays.erase(i);
-			break;
-		}
-	}
+	_grabbed_overlay = nullptr;
 }
 
 void Controller::Update()
 {
 	UpdateStatus();
-	if (!_is_connected)
+	if (!_is_connected || _hidden)
 		return;
 
+	UpdateLaser();
+
+	float move = _app->GetInputAnalog(_app->_input_handles.distance, _input_handle).y * 0.1; // TODO use frame time
+	if (_grabbed_overlay && move != 0.0f)
+	{
+		auto transform = _grabbed_overlay->GetTarget()->transform;
+		transform.m[2][3] = glm::clamp(transform.m[2][3] - move, -5.0f, -0.1f); // moving along z axis
+		_grabbed_overlay->SetTransformTracker(_device_index, &transform);
+	}
+}
+
+void Controller::UpdateLaser()
+{
 	auto controller_pose = _app->GetTrackerPose(_device_index);
 	auto controller_pos = GetPos(controller_pose);
 	auto forward = -glm::vec3(controller_pose[2]);
@@ -92,25 +94,14 @@ void Controller::Update()
 	{
 		if (_app->IsInputJustPressed(_app->_input_handles.grab, _input_handle))
 		{
-			ray.overlay->ControllerGrab(this);
-		}
-	}
-
-	if (!_grabbed_overlays.empty())
-	{
-		float move = _app->GetInputAnalog(_app->_input_handles.distance, _input_handle).y * 0.1; // TODO use frame time
-		if (move != 0.0f)
-		{
-			// delta is calculated & clamped for first overlay so that child overlays don't move further than the root
-			float main_z = _grabbed_overlays[0]->GetTarget()->transform.m[2][3];
-			float new_main_z = glm::clamp(main_z - move, -5.0f, -0.1f);
-			float real_delta = new_main_z - main_z;
-
-			for (auto overlay : _grabbed_overlays)
+			if (ray.overlay->IsHeld())
 			{
-				auto transform = overlay->GetTarget()->transform;
-				transform.m[2][3] += real_delta;
-				overlay->SetTransformTracker(_device_index, &transform);
+				// TODO resize mode
+			}
+			else
+			{
+				_grabbed_overlay = ray.overlay;
+				ray.overlay->ControllerGrab(this);
 			}
 		}
 	}
