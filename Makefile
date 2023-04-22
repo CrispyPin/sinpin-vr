@@ -4,7 +4,7 @@ CC := clang++
 LFLAGS := -lX11 -lXrandr -lglfw -lGL
 LIBS := openvr/libopenvr_api.so
 SRC := src/*.cpp
-OUT := ./overlay
+OUT := ./sinpin_vr
 CPPFLAGS := -Wall -std=c++17 $(LFLAGS) $(LIBS) $(SRC) -o $(OUT)
 
 build:
@@ -14,5 +14,5 @@ release:
 	$(CC) $(CPPFLAGS)
 
 run: build
-	./overlay
+	$(OUT)
 
