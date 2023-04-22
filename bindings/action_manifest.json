@@ -7,17 +7,22 @@
 	],
 	"actions": [
 		{
-			"name": "/actions/main/in/ToggleAll",
+			"name": "/actions/main/in/toggle_visibility",
 			"requirement": "mandatory",
 			"type": "boolean"
 		},
 		{
-			"name": "/actions/main/in/Grab",
+			"name": "/actions/main/in/edit_mode",
 			"requirement": "mandatory",
 			"type": "boolean"
 		},
 		{
-			"name": "/actions/main/in/Distance",
+			"name": "/actions/main/in/grab",
+			"requirement": "mandatory",
+			"type": "boolean"
+		},
+		{
+			"name": "/actions/main/in/distance",
 			"requirement": "suggested",
 			"type": "vector2"
 		}
@@ -32,9 +37,10 @@
 		{
 			"language_tag": "en_us",
 			"/actions/main": "Overlay actions",
-			"/actions/main/in/ToggleAll": "Toggle all",
-			"/actions/main/in/Grab": "Grab panel",
-			"/actions/main/in/Distance": "Move away"
+			"/actions/main/in/toggle_visibility": "Toggle visibility",
+			"/actions/main/in/edit_mode": "Toggle edit mode",
+			"/actions/main/in/grab": "grab panel",
+			"/actions/main/in/distance": "Move away"
 		}
 	]
 }

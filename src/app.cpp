@@ -57,11 +57,13 @@ App::App()
 		printf("actions path: %s\n", _actions_path.c_str());
 		vr_input->SetActionManifestPath(_actions_path.c_str());
 
-		auto action_err = vr_input->GetActionHandle("/actions/main/in/Grab", &_input_handles.grab);
+		auto action_err = vr_input->GetActionHandle("/actions/main/in/grab", &_input_handles.grab);
 		assert(action_err == 0);
-		action_err = vr_input->GetActionHandle("/actions/main/in/ToggleAll", &_input_handles.toggle);
+		action_err = vr_input->GetActionHandle("/actions/main/in/toggle_visibility", &_input_handles.toggle_hidden);
 		assert(action_err == 0);
-		action_err = vr_input->GetActionHandle("/actions/main/in/Distance", &_input_handles.distance);
+		action_err = vr_input->GetActionHandle("/actions/main/in/edit_mode", &_input_handles.edit_mode);
+		assert(action_err == 0);
+		action_err = vr_input->GetActionHandle("/actions/main/in/distance", &_input_handles.distance);
 		assert(action_err == 0);
 		action_err = vr_input->GetActionSetHandle("/actions/main", &_input_handles.set);
 		assert(action_err == 0);
@@ -162,19 +164,29 @@ void App::UpdateInput()
 
 	vr_sys->GetDeviceToAbsoluteTrackingPose(_tracking_origin, 0, _tracker_poses, MAX_TRACKERS);
 
-	if (IsInputJustPressed(_input_handles.toggle))
+	if (IsInputJustPressed(_input_handles.toggle_hidden))
 	{
 		_hidden = !_hidden;
-		_root_overlay.SetHidden(_hidden);
 		for (auto &panel : _panels)
 		{
 			panel.SetHidden(_hidden);
 		}
-		_controllers[0]->SetHidden(_hidden);
-		_controllers[1]->SetHidden(_hidden);
+		_root_overlay.SetHidden(_hidden || !_edit_mode);
+		_controllers[0]->SetHidden(_hidden || !_edit_mode);
+		_controllers[1]->SetHidden(_hidden || !_edit_mode);
 	}
-	_controllers[0]->Update();
-	_controllers[1]->Update();
+	if (!_hidden && IsInputJustPressed(_input_handles.edit_mode))
+	{
+		_edit_mode = !_edit_mode;
+		_root_overlay.SetHidden(_hidden || !_edit_mode);
+		_controllers[0]->SetHidden(_hidden || !_edit_mode);
+		_controllers[1]->SetHidden(_hidden || !_edit_mode);
+	}
+	if (_edit_mode)
+	{
+		_controllers[0]->Update();
+		_controllers[1]->Update();
+	}
 }
 
 void App::UpdateFramebuffer()

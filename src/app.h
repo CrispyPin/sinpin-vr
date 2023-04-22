@@ -19,9 +19,10 @@ struct CursorPos
 struct InputHandles
 {
 	vr::VRActionSetHandle_t set;
-	vr::VRActionHandle_t toggle;
+	vr::VRActionHandle_t toggle_hidden;
 	vr::VRActionHandle_t distance;
 	vr::VRActionHandle_t grab;
+	vr::VRActionHandle_t edit_mode;
 };
 
 class App
@@ -63,6 +64,7 @@ class App
 	Overlay _root_overlay;
 	std::vector<Panel> _panels;
 	bool _hidden = false;
+	bool _edit_mode = false;
 
   private:
 	void InitX11();

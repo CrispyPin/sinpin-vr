@@ -25,6 +25,7 @@ Controller::Controller(App *app, ControllerSide side)
 	UpdateStatus();
 	_laser.SetTextureToColor(255, 200, 255);
 	_laser.SetAlpha(0.2f);
+	_laser.SetHidden(true);
 }
 
 TrackerID Controller::DeviceIndex()
@@ -50,6 +51,7 @@ bool Controller::IsConnected()
 void Controller::SetHidden(bool state)
 {
 	_hidden = state;
+	_laser.SetHidden(_hidden);
 }
 
 void Controller::ReleaseOverlay()
@@ -94,7 +96,7 @@ void Controller::UpdateLaser()
 	auto controller_pose = _app->GetTrackerPose(_device_index);
 	auto controller_pos = GetPos(controller_pose);
 	auto forward = -glm::vec3(controller_pose[2]);
-	auto ray = _app->IntersectRay(controller_pos, forward, 5.0f);
+	auto ray = _app->IntersectRay(controller_pos, forward, 8.0f);
 	float len = ray.distance;
 
 	_last_pos = controller_pos;
@@ -143,5 +145,8 @@ void Controller::UpdateStatus()
 		_device_index = _app->vr_sys->GetTrackedDeviceIndexForControllerRole(vr::TrackedControllerRole_RightHand);
 	}
 	_is_connected &= _device_index < MAX_TRACKERS;
-	_laser.SetHidden(!_is_connected || _hidden);
+	if (!_is_connected)
+	{
+		_laser.SetHidden(true);
+	}
 }
