@@ -1,4 +1,4 @@
-
+VERSION=v0.1.0
 # CC := g++
 CC := clang++
 LFLAGS := -lX11 -lXrandr -lglfw -lGL
@@ -10,8 +10,8 @@ CPPFLAGS := -Wall -std=c++17 $(LFLAGS) $(LIBS) $(SRC) -o $(OUT)
 build:
 	$(CC) -g $(CPPFLAGS)
 
-release:
-	$(CC) $(CPPFLAGS)
+release: build
+	zip -r sinpin_vr-$(VERSION).zip sinpin_vr bindings openvr/libopenvr_api.so
 
 run: build
 	$(OUT)
