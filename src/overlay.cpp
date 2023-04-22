@@ -14,6 +14,7 @@ Overlay::Overlay(App *app, std::string name)
 	_name = name;
 	_app = app;
 	_holding_controller = nullptr;
+	_resize_controller = nullptr;
 	_width_m = 1;
 	_ratio = 1;
 	_hidden = false;
@@ -149,7 +150,7 @@ void Overlay::SetTargetWorld()
 
 Ray Overlay::IntersectRay(glm::vec3 origin, glm::vec3 direction, float max_len)
 {
-	float closest_dist = max_len;
+	float dist = max_len;
 	auto end = origin + direction * max_len;
 
 	auto panel_transform = GetTransformAbsolute();
@@ -166,46 +167,30 @@ Ray Overlay::IntersectRay(glm::vec3 origin, glm::vec3 direction, float max_len)
 
 	if (b.z < a.z && b.z < 0 && glm::abs(p.x) < (_width_m * 0.5f) && glm::abs(p.y) < (_width_m * 0.5f * _ratio))
 	{
-		float dist = r * max_len;
-		if (dist < closest_dist)
-		{
-			closest_dist = dist;
-		}
+		dist = glm::min(r * max_len, max_len);
 	}
-	return Ray{.overlay = this, .distance = closest_dist};
+	return Ray{.overlay = this, .distance = dist};
 }
 
 glm::mat4x4 Overlay::GetTransformAbsolute()
 {
-	if (_holding_controller != nullptr)
+	if (_target.type == TargetType::World)
 	{
 		VRMat pose;
-		TrackerID tracker;
-		auto err = _app->vr_overlay->GetOverlayTransformTrackedDeviceRelative(_id, &tracker, &pose);
-		assert(err == 0);
-		auto offset = ConvertMat(pose);
-		auto controller = _app->GetTrackerPose(_holding_controller->DeviceIndex());
-		return controller * offset;
+		vr::ETrackingUniverseOrigin tracking_universe;
+		_app->vr_overlay->GetOverlayTransformAbsolute(_id, &tracking_universe, &pose);
+		return ConvertMat(pose);
 	}
-	else
+	if (_target.type == TargetType::Tracker)
 	{
-		switch (_target.type)
-		{
-		case TargetType::World: {
-			VRMat pose;
-			vr::ETrackingUniverseOrigin tracking_universe;
-			_app->vr_overlay->GetOverlayTransformAbsolute(_id, &tracking_universe, &pose);
-			return ConvertMat(pose);
-		}
-		case TargetType::Tracker: {
-			VRMat pose;
-			_app->vr_overlay->GetOverlayTransformTrackedDeviceRelative(_id, &_target.id, &pose);
-			auto offset = ConvertMat(pose);
-			auto tracker_pose = _app->GetTrackerPose(_target.id);
-			return tracker_pose * offset;
-		}
-		}
+		VRMat pose;
+		_app->vr_overlay->GetOverlayTransformTrackedDeviceRelative(_id, &_target.id, &pose);
+		auto offset = ConvertMat(pose);
+		auto tracker_pose = _app->GetTrackerPose(_target.id);
+		return tracker_pose * offset;
 	}
+	printf("Error: overlay '%s' not set to a valid target", _name.c_str());
+	return ConvertMat(VRMatIdentity);
 }
 
 Target *Overlay::GetTarget()
@@ -223,7 +208,41 @@ void Overlay::Update()
 
 	if (_holding_controller != nullptr)
 	{
-		if (!_app->GetInputDigital(_app->_input_handles.grab, _holding_controller->InputHandle()).bState)
+		bool hold_controller_holding = _app->GetInputDigital(_app->_input_handles.grab, _holding_controller->InputHandle()).bState;
+		if (_resize_controller != nullptr)
+		{
+			bool resize_controller_holding = _app->GetInputDigital(_app->_input_handles.grab, _resize_controller->InputHandle()).bState;
+			if (!resize_controller_holding)
+			{
+				_resize_controller = nullptr;
+			}
+			else if (!hold_controller_holding)
+			{
+				_resize_controller = nullptr;
+				ControllerRelease();
+			}
+			else
+			{
+				auto pos_a = _holding_controller->GetLastPos() + _holding_controller->GetLastRot() * _resize_length_a;
+				auto pos_b = _resize_controller->GetLastPos() + _resize_controller->GetLastRot() * _resize_length_b;
+
+				float distance = glm::length(pos_a - pos_b);
+				float factor = (distance / _resize_base_distance);
+				float min_factor = 0.1f / _resize_original_size;
+				float max_factor = 5.0f / _resize_original_size;
+				factor = glm::clamp(factor, min_factor, max_factor);
+				float new_size = _resize_original_size * factor;
+
+				SetWidth(new_size);
+
+				auto transform = _target.transform;
+				auto pos = _resize_held_offset * factor;
+				transform.m[0][3] = pos.x;
+				transform.m[1][3] = pos.y;
+				SetTransformTracker(_holding_controller->DeviceIndex(), &transform);
+			}
+		}
+		else if (!hold_controller_holding)
 		{
 			ControllerRelease();
 		}
@@ -262,6 +281,33 @@ void Overlay::ControllerRelease()
 		}
 	}
 	_holding_controller = nullptr;
+}
+
+void Overlay::ControllerResize(Controller *controller)
+{
+	if (_resize_controller || controller == _holding_controller)
+	{
+		return;
+	}
+	for (auto child : _children)
+	{
+		if (!child->IsHeld())
+		{
+			child->SetTargetWorld();
+		}
+	}
+	_resize_controller = controller;
+	_resize_original_size = _width_m;
+
+	_resize_length_a = _holding_controller->GetLastRay().distance;
+	_resize_length_b = _resize_controller->GetLastRay().distance;
+
+	auto pos_a = _holding_controller->GetLastPos() + _holding_controller->GetLastRot() * _resize_length_a;
+	auto pos_b = _resize_controller->GetLastPos() + _resize_controller->GetLastRot() * _resize_length_b;
+
+	// distance between laser points
+	_resize_base_distance = glm::length(pos_a - pos_b);
+	_resize_held_offset = GetPos(_target.transform);
 }
 
 void Overlay::AddChildOverlay(Overlay *overlay)

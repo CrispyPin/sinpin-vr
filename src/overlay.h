@@ -55,8 +55,9 @@ class Overlay
 
 	Ray IntersectRay(glm::vec3 origin, glm::vec3 direction, float max_len);
 
-	void ControllerRelease();
 	void ControllerGrab(Controller *controller);
+	void ControllerRelease();
+	void ControllerResize(Controller *controller);
 
 	void AddChildOverlay(Overlay *child);
 	void RemoveChildOverlay(Overlay *child);
@@ -73,6 +74,12 @@ class Overlay
 	float _alpha;
 	float _ratio;
 	Controller *_holding_controller;
+	Controller *_resize_controller;
+	float _resize_original_size;
+	float _resize_base_distance;
+	float _resize_length_a;
+	float _resize_length_b;
+	glm::vec3 _resize_held_offset;
 
 	std::vector<Overlay *> _children;
 

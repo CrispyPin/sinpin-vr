@@ -57,6 +57,21 @@ void Controller::ReleaseOverlay()
 	_grabbed_overlay = nullptr;
 }
 
+Ray Controller::GetLastRay()
+{
+	return _last_ray;
+}
+
+glm::vec3 Controller::GetLastPos()
+{
+	return _last_pos;
+}
+
+glm::vec3 Controller::GetLastRot()
+{
+	return _last_rotation;
+}
+
 void Controller::Update()
 {
 	UpdateStatus();
@@ -82,6 +97,10 @@ void Controller::UpdateLaser()
 	auto ray = _app->IntersectRay(controller_pos, forward, 5.0f);
 	float len = ray.distance;
 
+	_last_pos = controller_pos;
+	_last_rotation = forward;
+	_last_ray = ray;
+
 	auto hmd_global_pos = GetPos(_app->GetTrackerPose(0));
 	auto hmd_local_pos = glm::inverse(controller_pose) * glm::vec4(hmd_global_pos - controller_pos, 0);
 	hmd_local_pos.z = 0;
@@ -96,7 +115,7 @@ void Controller::UpdateLaser()
 		{
 			if (ray.overlay->IsHeld())
 			{
-				// TODO resize mode
+				ray.overlay->ControllerResize(this);
 			}
 			else
 			{

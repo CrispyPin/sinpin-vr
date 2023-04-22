@@ -20,6 +20,9 @@ class Controller
 	ControllerSide Side();
 
 	bool IsConnected();
+	Ray GetLastRay();
+	glm::vec3 GetLastPos();
+	glm::vec3 GetLastRot();
 
 	void SetHidden(bool state);
 
@@ -39,4 +42,7 @@ class Controller
 	bool _is_connected;
 	bool _hidden;
 	Overlay *_grabbed_overlay;
+	Ray _last_ray;
+	glm::vec3 _last_rotation;
+	glm::vec3 _last_pos;
 };

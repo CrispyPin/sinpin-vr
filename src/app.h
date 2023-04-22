@@ -24,12 +24,6 @@ struct InputHandles
 	vr::VRActionHandle_t grab;
 };
 
-struct Ray
-{
-	Overlay *overlay;
-	float distance;
-};
-
 class App
 {
   public:
