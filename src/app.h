@@ -23,6 +23,7 @@ struct InputHandles
 	vr::VRActionHandle_t distance;
 	vr::VRActionHandle_t grab;
 	vr::VRActionHandle_t edit_mode;
+	vr::VRActionHandle_t reset;
 };
 
 class App
@@ -49,6 +50,9 @@ class App
 
 	int _root_width;
 	int _root_height;
+	float _pixels_per_meter;
+	float _total_height_meters;
+	float _total_width_meters;
 
 	vr::ETrackingUniverseOrigin _tracking_origin;
 	std::filesystem::path _actions_path;

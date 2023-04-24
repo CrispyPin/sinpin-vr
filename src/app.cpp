@@ -5,6 +5,8 @@
 #include <cassert>
 #include <glm/matrix.hpp>
 
+const VRMat root_start_pose = {{{1, 0, 0, 0}, {0, 1, 0, 0.8f}, {0, 0, 1, 0}}}; // 0.8m above origin
+
 App::App()
 {
 	_tracking_origin = vr::TrackingUniverseStanding;
@@ -26,9 +28,9 @@ App::App()
 	XRRMonitorInfo *monitor_info = XRRGetMonitors(_xdisplay, _root_window, 1, &monitor_count);
 	printf("found %d monitors:\n", monitor_count);
 
-	float pixels_per_meter = 1920;
-	float total_width_meters = _root_width / pixels_per_meter;
-	float total_height_meters = _root_height / pixels_per_meter;
+	_pixels_per_meter = 1920;
+	_total_width_meters = _root_width / _pixels_per_meter;
+	_total_height_meters = _root_height / _pixels_per_meter;
 
 	for (int i = 0; i < monitor_count; i++)
 	{
@@ -36,14 +38,6 @@ App::App()
 		printf("screen %d: pos(%d, %d) %dx%d\n", i, mon.x, mon.y, mon.width, mon.height);
 
 		_panels.push_back(Panel(this, i, mon.x, mon.y, mon.width, mon.height));
-
-		float width = mon.width / pixels_per_meter;
-		float pos_x = mon.x / pixels_per_meter + width / 2.0f - total_width_meters / 2.0f;
-		float height = mon.height / pixels_per_meter;
-		float pos_y = 1.2f + mon.y / pixels_per_meter - height / 2.0f + total_height_meters / 2.0f;
-		VRMat start_pose = {{{1, 0, 0, pos_x}, {0, 1, 0, pos_y}, {0, 0, 1, 0}}};
-		_panels[i].GetOverlay()->SetTransformWorld(&start_pose);
-		_panels[i].GetOverlay()->SetWidth(width);
 	}
 
 	for (auto &panel : _panels)
@@ -63,6 +57,8 @@ App::App()
 		assert(action_err == 0);
 		action_err = vr_input->GetActionHandle("/actions/main/in/edit_mode", &_input_handles.edit_mode);
 		assert(action_err == 0);
+		action_err = vr_input->GetActionHandle("/actions/main/in/reset", &_input_handles.reset);
+		assert(action_err == 0);
 		action_err = vr_input->GetActionHandle("/actions/main/in/distance", &_input_handles.distance);
 		assert(action_err == 0);
 		action_err = vr_input->GetActionSetHandle("/actions/main", &_input_handles.set);
@@ -75,6 +71,7 @@ App::~App()
 	vr::VR_Shutdown();
 	glfwDestroyWindow(_gl_window);
 	glfwTerminate();
+	XCloseDisplay(_xdisplay);
 }
 
 void App::InitX11()
@@ -124,13 +121,7 @@ void App::InitRootOverlay()
 {
 	_root_overlay = Overlay(this, "root");
 	_root_overlay.SetAlpha(0.5f);
-	// clang-format off
-	VRMat root_start_pose = {{
-		{0.25f,	0.0f,	0.0f, 0},
-		{0.0f,	0.25f,	0.0f, 0.8f},
-		{0.0f,	0.0f,	1.0f, 0}
-	}};
-	// clang-format on
+	_root_overlay.SetWidth(0.25f);
 	_root_overlay.SetTransformWorld(&root_start_pose);
 	_root_overlay.SetTextureToColor(110, 30, 190);
 }
@@ -174,6 +165,15 @@ void App::UpdateInput()
 		_root_overlay.SetHidden(_hidden || !_edit_mode);
 		_controllers[0]->SetHidden(_hidden || !_edit_mode);
 		_controllers[1]->SetHidden(_hidden || !_edit_mode);
+	}
+	if (IsInputJustPressed(_input_handles.reset))
+	{
+		_root_overlay.SetTransformWorld(&root_start_pose);
+		_root_overlay.SetWidth(0.25f);
+		for (auto &panel : _panels)
+		{
+			panel.ResetTransform();
+		}
 	}
 	if (!_hidden && IsInputJustPressed(_input_handles.edit_mode))
 	{

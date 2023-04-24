@@ -24,6 +24,18 @@ Panel::Panel(App *app, int index, int x, int y, int width, int height)
 	_texture.handle = (void *)(uintptr_t)_gl_texture;
 	_overlay.SetRatio(height / (float)width);
 	_overlay.SetTextureToColor(50, 20, 50);
+	ResetTransform();
+}
+
+void Panel::ResetTransform()
+{
+	float width = _width / _app->_pixels_per_meter;
+	float pos_x = _x / _app->_pixels_per_meter + width / 2.0f - _app->_total_width_meters / 2.0f;
+	float height = _height / _app->_pixels_per_meter;
+	float pos_y = 1.2f + _y / _app->_pixels_per_meter - height / 2.0f + _app->_total_height_meters / 2.0f;
+	VRMat pose = {{{1, 0, 0, pos_x}, {0, 1, 0, pos_y}, {0, 0, 1, 0}}};
+	_overlay.SetTransformWorld(&pose);
+	_overlay.SetWidth(width);
 }
 
 void Panel::Update()

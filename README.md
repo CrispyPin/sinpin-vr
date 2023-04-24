@@ -6,8 +6,9 @@ https://user-images.githubusercontent.com/54243225/233798783-27d1a6ae-b71d-448f-
 ## features
 - one overlay per screen
 - shows cursor position
-- global visibility toggle (default: long press left B)
-- edit mode (default: long press right B)
+- global visibility toggle (default: press left touch)
+- reset positions (default: long press left A)
+- edit mode (default: press right touch)
 	- move screens around (default: trigger)
 	- resize screens (move with two controllers)
 	- push/pull screens (default: joystick up/down)

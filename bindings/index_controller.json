@@ -138,7 +138,7 @@
          "hidden" : true
       }
    },
-   "app_key" : "system.generated.overlay",
+   "app_key" : "system.generated.sinpin_vr",
    "bindings" : {
       "/actions/legacy" : {
          "haptics" : [
@@ -590,15 +590,6 @@
          "sources" : [
             {
                "inputs" : {
-                  "long" : {
-                     "output" : "/actions/main/in/edit_mode"
-                  }
-               },
-               "mode" : "button",
-               "path" : "/user/hand/right/input/b"
-            },
-            {
-               "inputs" : {
                   "position" : {
                      "output" : "/actions/main/in/distance"
                   }
@@ -626,30 +617,48 @@
             },
             {
                "inputs" : {
-                  "long" : {
-                     "output" : "/actions/main/in/toggle_visibility"
-                  }
-               },
-               "mode" : "button",
-               "path" : "/user/hand/left/input/b"
-            },
-            {
-               "inputs" : {
                   "position" : {
                      "output" : "/actions/main/in/distance"
                   }
                },
                "mode" : "joystick",
                "path" : "/user/hand/left/input/thumbstick"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/main/in/toggle_visibility"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/left/input/trackpad"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/main/in/edit_mode"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/right/input/trackpad"
+            },
+            {
+               "inputs" : {
+                  "long" : {
+                     "output" : "/actions/main/in/reset"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/left/input/a"
             }
          ]
       }
    },
    "category" : "steamvr_input",
    "controller_type" : "knuckles",
-   "description" : "Default binding values for legacy apps using the Index Controller",
+   "description" : "yes",
    "interaction_profile" : "",
-   "name" : "Saved overlay configuration for Index Controller",
+   "name" : "Saved sinpin_vr bindings",
    "options" : {
       "mirror_actions" : true,
       "simulated_controller_type" : "none"

@@ -22,6 +22,11 @@
 			"type": "boolean"
 		},
 		{
+			"name": "/actions/main/in/reset",
+			"requirement": "suggested",
+			"type": "boolean"
+		},
+		{
 			"name": "/actions/main/in/distance",
 			"requirement": "suggested",
 			"type": "vector2"
@@ -40,7 +45,8 @@
 			"/actions/main/in/toggle_visibility": "Toggle visibility",
 			"/actions/main/in/edit_mode": "Toggle edit mode",
 			"/actions/main/in/grab": "grab panel",
-			"/actions/main/in/distance": "Move away"
+			"/actions/main/in/distance": "Move away",
+			"/actions/main/in/reset": "Reset positions"
 		}
 	]
 }

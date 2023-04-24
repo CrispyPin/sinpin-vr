@@ -17,6 +17,7 @@ class Panel
 
 	void Update();
 	void SetHidden(bool state);
+	void ResetTransform();
 
 	Overlay *GetOverlay();
 
