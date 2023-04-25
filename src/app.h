@@ -78,4 +78,5 @@ class App
 
 	void UpdateFramebuffer();
 	void UpdateInput();
+	void UpdateUIVisibility();
 };

@@ -162,31 +162,38 @@ void App::UpdateInput()
 		{
 			panel.SetHidden(_hidden);
 		}
-		_root_overlay.SetHidden(_hidden || !_edit_mode);
-		_controllers[0]->SetHidden(_hidden || !_edit_mode);
-		_controllers[1]->SetHidden(_hidden || !_edit_mode);
+		UpdateUIVisibility();
 	}
-	if (IsInputJustPressed(_input_handles.reset))
+	if (!_hidden)
 	{
-		_root_overlay.SetTransformWorld(&root_start_pose);
-		_root_overlay.SetWidth(0.25f);
-		for (auto &panel : _panels)
+		if (IsInputJustPressed(_input_handles.reset))
 		{
-			panel.ResetTransform();
+			_root_overlay.SetTransformWorld(&root_start_pose);
+			_root_overlay.SetWidth(0.25f);
+			for (auto &panel : _panels)
+			{
+				panel.ResetTransform();
+			}
+		}
+		if (IsInputJustPressed(_input_handles.edit_mode))
+		{
+			_edit_mode = !_edit_mode;
+			UpdateUIVisibility();
+		}
+		if (_edit_mode)
+		{
+			_controllers[0]->Update();
+			_controllers[1]->Update();
 		}
 	}
-	if (!_hidden && IsInputJustPressed(_input_handles.edit_mode))
-	{
-		_edit_mode = !_edit_mode;
-		_root_overlay.SetHidden(_hidden || !_edit_mode);
-		_controllers[0]->SetHidden(_hidden || !_edit_mode);
-		_controllers[1]->SetHidden(_hidden || !_edit_mode);
-	}
-	if (_edit_mode)
-	{
-		_controllers[0]->Update();
-		_controllers[1]->Update();
-	}
+}
+
+void App::UpdateUIVisibility()
+{
+	bool state = _hidden || !_edit_mode;
+	_root_overlay.SetHidden(state);
+	_controllers[0]->SetHidden(state);
+	_controllers[1]->SetHidden(state);
 }
 
 void App::UpdateFramebuffer()
