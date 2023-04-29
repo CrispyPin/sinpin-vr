@@ -13,6 +13,8 @@ Note: only index controllers have default bindings right now, feel free to make 
 - activate cursor input (default: press touchpad)
 	- left mouse default: trigger
 	- right mouse default: A
+	- middle mouse default: not bound
+	- scrolling default: joystick up/down
 - edit mode (default: long press press right B)
 	- move screens around (default: trigger)
 	- resize screens (move with two controllers)
