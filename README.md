@@ -3,12 +3,17 @@ A SteamVR overlay for Linux+X11 that displays all your screens in VR.
 
 https://user-images.githubusercontent.com/54243225/233798783-27d1a6ae-b71d-448f-bb67-76015e539452.mp4
 
+Note: only index controllers have default bindings right now, feel free to make a PR.
+
 ## features
 - one overlay per screen
 - shows cursor position
-- global visibility toggle (default: press left touch)
+- global visibility toggle (default: long press left B)
 - reset positions (default: long press left A)
-- edit mode (default: press right touch)
+- activate cursor input (default: press touchpad)
+	- left mouse default: trigger
+	- right mouse default: A
+- edit mode (default: long press press right B)
 	- move screens around (default: trigger)
 	- resize screens (move with two controllers)
 	- push/pull screens (default: joystick up/down)
