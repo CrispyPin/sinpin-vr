@@ -22,6 +22,7 @@ struct InputHandles
 	vr::VRActionHandle_t toggle_hidden;
 	vr::VRActionHandle_t distance;
 	vr::VRActionHandle_t grab;
+	vr::VRActionHandle_t activate_cursor;
 	vr::VRActionHandle_t edit_mode;
 	vr::VRActionHandle_t reset;
 };
@@ -41,6 +42,7 @@ class App
 	CursorPos GetCursorPosition();
 
 	Ray IntersectRay(glm::vec3 origin, glm::vec3 direction, float max_len);
+	void SetCursor(int x, int y);
 
 	Display *_xdisplay;
 	Window _root_window;
@@ -69,6 +71,7 @@ class App
 	std::vector<Panel> _panels;
 	bool _hidden = false;
 	bool _edit_mode = false;
+	std::optional<Controller *> _active_cursor;
 
   private:
 	void InitX11();

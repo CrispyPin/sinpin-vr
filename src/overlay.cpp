@@ -169,7 +169,7 @@ Ray Overlay::IntersectRay(glm::vec3 origin, glm::vec3 direction, float max_len)
 	{
 		dist = glm::min(r * max_len, max_len);
 	}
-	return Ray{.overlay = this, .distance = dist};
+	return Ray{.overlay = this, .distance = dist, .local_pos = p, .hit_panel = nullptr};
 }
 
 glm::mat4x4 Overlay::GetTransformAbsolute()

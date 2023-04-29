@@ -68,6 +68,18 @@ void Panel::SetHidden(bool state)
 	_overlay.SetHidden(state);
 }
 
+Ray Panel::IntersectRay(glm::vec3 origin, glm::vec3 direction, float max_len)
+{
+	auto ray = _overlay.IntersectRay(origin, direction, max_len);
+	ray.hit_panel = this;
+	return ray;
+}
+
+void Panel::SetCursor(int x, int y)
+{
+	_app->SetCursor(x + _x, y + _y);
+}
+
 void Panel::UpdateCursor()
 {
 	auto global_pos = _app->GetCursorPosition();

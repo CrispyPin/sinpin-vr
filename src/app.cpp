@@ -1,6 +1,7 @@
 #include "app.h"
 #include "controller.h"
 #include "util.h"
+#include <X11/Xlib.h>
 #include <X11/extensions/Xrandr.h>
 #include <cassert>
 #include <glm/matrix.hpp>
@@ -54,6 +55,8 @@ App::App()
 		auto action_err = vr_input->GetActionHandle("/actions/main/in/grab", &_input_handles.grab);
 		assert(action_err == 0);
 		action_err = vr_input->GetActionHandle("/actions/main/in/toggle_visibility", &_input_handles.toggle_hidden);
+		assert(action_err == 0);
+		action_err = vr_input->GetActionHandle("/actions/main/in/activate_cursor", &_input_handles.activate_cursor);
 		assert(action_err == 0);
 		action_err = vr_input->GetActionHandle("/actions/main/in/edit_mode", &_input_handles.edit_mode);
 		assert(action_err == 0);
@@ -180,20 +183,15 @@ void App::UpdateInput()
 			_edit_mode = !_edit_mode;
 			UpdateUIVisibility();
 		}
-		if (_edit_mode)
-		{
-			_controllers[0]->Update();
-			_controllers[1]->Update();
-		}
 	}
+	_controllers[0]->Update();
+	_controllers[1]->Update();
 }
 
 void App::UpdateUIVisibility()
 {
 	bool state = _hidden || !_edit_mode;
 	_root_overlay.SetHidden(state);
-	_controllers[0]->SetHidden(state);
-	_controllers[1]->SetHidden(state);
 }
 
 void App::UpdateFramebuffer()
@@ -262,7 +260,7 @@ Ray App::IntersectRay(glm::vec3 origin, glm::vec3 direction, float max_len)
 
 	for (auto &panel : _panels)
 	{
-		auto r_panel = panel.GetOverlay()->IntersectRay(origin, direction, max_len);
+		auto r_panel = panel.IntersectRay(origin, direction, max_len);
 		if (r_panel.distance < ray.distance)
 		{
 			ray = r_panel;
@@ -287,4 +285,10 @@ CursorPos App::GetCursorPosition()
 		&pos_local.x, &pos_local.y,
 		&buttons);
 	return pos;
+}
+
+void App::SetCursor(int x, int y)
+{
+	// I don't know what the return value of XWarpPointer means, it seems to be 1 on success.
+	XWarpPointer(_xdisplay, _root_window, _root_window, 0, 0, _root_width, _root_height, x, y);
 }

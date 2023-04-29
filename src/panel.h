@@ -19,6 +19,19 @@ class Panel
 	void SetHidden(bool state);
 	void ResetTransform();
 
+	int Width()
+	{
+		return _width;
+	}
+	int Height()
+	{
+		return _height;
+	}
+
+	void SetCursor(int x, int y);
+
+	Ray IntersectRay(glm::vec3 origin, glm::vec3 direction, float max_len);
+
 	Overlay *GetOverlay();
 
   private:

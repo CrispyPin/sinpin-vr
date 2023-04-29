@@ -13,7 +13,7 @@ Controller::Controller(App *app, ControllerSide side)
 	_input_handle = 0;
 	_is_connected = false;
 	_side = side;
-	_hidden = false;
+	_cursor_active = false;
 
 	std::string laser_name = "controller_laser_";
 	if (side == ControllerSide::Left)
@@ -48,12 +48,6 @@ bool Controller::IsConnected()
 	return _is_connected;
 }
 
-void Controller::SetHidden(bool state)
-{
-	_hidden = state;
-	_laser.SetHidden(_hidden);
-}
-
 void Controller::ReleaseOverlay()
 {
 	_grabbed_overlay = nullptr;
@@ -77,17 +71,71 @@ glm::vec3 Controller::GetLastRot()
 void Controller::Update()
 {
 	UpdateStatus();
-	if (!_is_connected || _hidden)
+	if (!_is_connected)
 		return;
 
 	UpdateLaser();
 
-	float move = _app->GetInputAnalog(_app->_input_handles.distance, _input_handle).y * 0.1; // TODO use frame time
-	if (_grabbed_overlay && move != 0.0f)
+	if (_app->_edit_mode)
 	{
-		auto transform = _grabbed_overlay->GetTarget()->transform;
-		transform.m[2][3] = glm::clamp(transform.m[2][3] - move, -5.0f, -0.1f); // moving along z axis
-		_grabbed_overlay->SetTransformTracker(_device_index, &transform);
+		if (_last_ray.overlay != nullptr)
+		{
+			auto ray = _last_ray;
+			if (_app->IsInputJustPressed(_app->_input_handles.grab, _input_handle))
+			{
+				if (ray.overlay->IsHeld())
+				{
+					ray.overlay->ControllerResize(this);
+				}
+				else
+				{
+					_grabbed_overlay = ray.overlay;
+					ray.overlay->ControllerGrab(this);
+				}
+			}
+		}
+
+		if (_grabbed_overlay != nullptr)
+		{
+			float move = _app->GetInputAnalog(_app->_input_handles.distance, _input_handle).y * 0.1; // TODO use frame time
+			if (move != 0.0f)
+			{
+				auto transform = _grabbed_overlay->GetTarget()->transform;
+				transform.m[2][3] = glm::clamp(transform.m[2][3] - move, -5.0f, -0.1f); // moving along z axis
+				_grabbed_overlay->SetTransformTracker(_device_index, &transform);
+			}
+		}
+	}
+	else //view mode
+	{
+		if (_app->IsInputJustPressed(_app->_input_handles.activate_cursor, _input_handle))
+		{
+			if (!_cursor_active && _app->_active_cursor.has_value())
+			{
+				_app->_active_cursor.value()->_cursor_active = false;
+				_app->_active_cursor = this;
+			}
+			_cursor_active = !_cursor_active;
+			_app->_active_cursor = this;
+		}
+		if (_cursor_active)
+		{
+			// printf("update cursor on hand %d\n", _side);
+			if (_last_ray.overlay != nullptr && _last_ray.hit_panel != nullptr)
+			{
+				auto pos = glm::vec2(_last_ray.local_pos.x, _last_ray.local_pos.y);
+				// normalize positions to +-0.5
+				pos /= _last_ray.overlay->Width();
+				pos.y *= -1;
+
+				// shift to 0-1
+				pos.x += 0.5f;
+				pos.y += 0.5f * _last_ray.overlay->Ratio();
+
+				pos *= _last_ray.hit_panel->Width();
+				_last_ray.hit_panel->SetCursor(pos.x, pos.y);
+			}
+		}
 	}
 }
 
@@ -110,22 +158,7 @@ void Controller::UpdateLaser()
 
 	VRMat transform = {{{width * hmd_dir.y, 0, width * hmd_dir.x, 0}, {width * -hmd_dir.x, 0, width * hmd_dir.y, 0}, {0, len, 0, len * -0.5f}}};
 	_laser.SetTransformTracker(_device_index, &transform);
-
-	if (ray.overlay != nullptr)
-	{
-		if (_app->IsInputJustPressed(_app->_input_handles.grab, _input_handle))
-		{
-			if (ray.overlay->IsHeld())
-			{
-				ray.overlay->ControllerResize(this);
-			}
-			else
-			{
-				_grabbed_overlay = ray.overlay;
-				ray.overlay->ControllerGrab(this);
-			}
-		}
-	}
+	_laser.SetHidden(!_is_connected || _app->_hidden || (!_app->_edit_mode && !_cursor_active));
 }
 
 void Controller::UpdateStatus()
@@ -145,8 +178,4 @@ void Controller::UpdateStatus()
 		_device_index = _app->vr_sys->GetTrackedDeviceIndexForControllerRole(vr::TrackedControllerRole_RightHand);
 	}
 	_is_connected &= _device_index < MAX_TRACKERS;
-	if (!_is_connected)
-	{
-		_laser.SetHidden(true);
-	}
 }

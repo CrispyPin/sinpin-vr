@@ -650,6 +650,24 @@
                },
                "mode" : "button",
                "path" : "/user/hand/left/input/a"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/main/in/activate_cursor"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/right/input/trigger"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/main/in/activate_cursor"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/left/input/trigger"
             }
          ]
       }
@@ -658,7 +676,7 @@
    "controller_type" : "knuckles",
    "description" : "yes",
    "interaction_profile" : "",
-   "name" : "Saved sinpin_vr bindings",
+   "name" : "Default sinpin_vr bindings",
    "options" : {
       "mirror_actions" : true,
       "simulated_controller_type" : "none"

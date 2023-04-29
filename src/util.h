@@ -11,10 +11,13 @@ const VRMat VRMatIdentity{{{1, 0, 0, 0}, {0, 1, 0, 0}, {0, 0, 1, 0}}};
 const int MAX_TRACKERS = vr::k_unMaxTrackedDeviceCount;
 
 class Overlay;
+class Panel;
 struct Ray
 {
 	Overlay *overlay;
 	float distance;
+	glm::vec3 local_pos;
+	Panel *hit_panel;
 };
 
 inline void PrintVec(glm::vec3 v)

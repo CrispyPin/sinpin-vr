@@ -24,8 +24,6 @@ class Controller
 	glm::vec3 GetLastPos();
 	glm::vec3 GetLastRot();
 
-	void SetHidden(bool state);
-
 	void ReleaseOverlay();
 
 	void Update();
@@ -39,9 +37,12 @@ class Controller
 	ControllerSide _side;
 	TrackerID _device_index;
 	vr::VRInputValueHandle_t _input_handle;
+
 	bool _is_connected;
-	bool _hidden;
+
+	bool _cursor_active;
 	Overlay *_grabbed_overlay;
+
 	Ray _last_ray;
 	glm::vec3 _last_rotation;
 	glm::vec3 _last_pos;

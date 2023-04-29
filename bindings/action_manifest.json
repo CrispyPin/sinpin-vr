@@ -22,6 +22,11 @@
 			"type": "boolean"
 		},
 		{
+			"name": "/actions/main/in/activate_cursor",
+			"requirement": "suggested",
+			"type": "boolean"
+		},
+		{
 			"name": "/actions/main/in/reset",
 			"requirement": "suggested",
 			"type": "boolean"
@@ -42,11 +47,12 @@
 		{
 			"language_tag": "en_us",
 			"/actions/main": "Overlay actions",
-			"/actions/main/in/toggle_visibility": "Toggle visibility",
-			"/actions/main/in/edit_mode": "Toggle edit mode",
+			"/actions/main/in/toggle_visibility": "toggle visibility",
+			"/actions/main/in/edit_mode": "toggle edit mode",
 			"/actions/main/in/grab": "grab panel",
-			"/actions/main/in/distance": "Move away",
-			"/actions/main/in/reset": "Reset positions"
+			"/actions/main/in/activate_cursor": "activate cursor",
+			"/actions/main/in/distance": "move away",
+			"/actions/main/in/reset": "reset positions"
 		}
 	]
 }
