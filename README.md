@@ -1,7 +1,7 @@
 # sinpin-vr
 A SteamVR overlay for Linux+X11 that displays all your screens in VR.
 
-https://user-images.githubusercontent.com/54243225/233798783-27d1a6ae-b71d-448f-bb67-76015e539452.mp4
+https://user-images.githubusercontent.com/54243225/235313348-2ce9b2d8-8458-49f8-ba94-16e577c4f502.mp4
 
 Note: only index controllers have default bindings right now, feel free to make a PR.
 
