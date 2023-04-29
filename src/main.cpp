@@ -1,7 +1,7 @@
 #include "app.h"
 #include <signal.h>
 
-#define UPDATE_RATE 60
+#define UPDATE_RATE 120
 
 bool should_exit = false;
 
@@ -18,8 +18,8 @@ int main()
 
 	while (!should_exit)
 	{
-		app.Update();
 		usleep(1000000 / UPDATE_RATE);
+		app.Update(1.0 / UPDATE_RATE);
 	}
 	printf("\nShutting down\n");
 	return 0;

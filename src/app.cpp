@@ -9,6 +9,8 @@
 
 const VRMat root_start_pose = {{{1, 0, 0, 0}, {0, 1, 0, 0.8f}, {0, 0, 1, 0}}}; // 0.8m above origin
 
+const int FRAME_INTERVAL = 4; // number of update loops until the frame buffer is updated
+
 App::App()
 {
 	_tracking_origin = vr::TrackingUniverseStanding;
@@ -68,6 +70,10 @@ App::App()
 		action_err = vr_input->GetActionHandle("/actions/cursor/in/mouse_left", &_input_handles.cursor.mouse_left);
 		assert(action_err == 0);
 		action_err = vr_input->GetActionHandle("/actions/cursor/in/mouse_right", &_input_handles.cursor.mouse_right);
+		assert(action_err == 0);
+		action_err = vr_input->GetActionHandle("/actions/cursor/in/mouse_middle", &_input_handles.cursor.mouse_middle);
+		assert(action_err == 0);
+		action_err = vr_input->GetActionHandle("/actions/cursor/in/scroll", &_input_handles.cursor.scroll);
 		assert(action_err == 0);
 		action_err = vr_input->GetActionSetHandle("/actions/main", &_input_handles.main_set);
 		assert(action_err == 0);
@@ -138,9 +144,9 @@ void App::InitRootOverlay()
 	_root_overlay.SetTextureToColor(110, 30, 190);
 }
 
-void App::Update()
+void App::Update(float dtime)
 {
-	UpdateInput();
+	UpdateInput(dtime);
 	if (!_hidden)
 	{
 		_root_overlay.Update();
@@ -153,7 +159,7 @@ void App::Update()
 	_frames_since_framebuffer += 1;
 }
 
-void App::UpdateInput()
+void App::UpdateInput(float dtime)
 {
 	vr::VRActiveActionSet_t active_sets[2];
 	active_sets[0].ulActionSet = _input_handles.main_set;
@@ -206,8 +212,8 @@ void App::UpdateInput()
 			}
 		}
 	}
-	_controllers[0]->Update();
-	_controllers[1]->Update();
+	_controllers[0]->Update(dtime);
+	_controllers[1]->Update(dtime);
 }
 
 void App::UpdateUIVisibility()
@@ -218,7 +224,7 @@ void App::UpdateUIVisibility()
 
 void App::UpdateFramebuffer()
 {
-	if (_frames_since_framebuffer < 2)
+	if (_frames_since_framebuffer < FRAME_INTERVAL)
 	{
 		return;
 	}

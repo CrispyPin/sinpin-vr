@@ -30,6 +30,8 @@ struct InputHandles
 		vr::VRActionHandle_t activate;
 		vr::VRActionHandle_t mouse_left;
 		vr::VRActionHandle_t mouse_right;
+		vr::VRActionHandle_t mouse_middle;
+		vr::VRActionHandle_t scroll;
 	} cursor;
 	vr::VRActionSetHandle_t cursor_set;
 	struct
@@ -45,7 +47,7 @@ class App
   public:
 	App();
 	~App();
-	void Update();
+	void Update(float dtime);
 
 	std::vector<TrackerID> GetControllers();
 	glm::mat4 GetTrackerPose(TrackerID tracker);
@@ -94,6 +96,6 @@ class App
 	void InitRootOverlay();
 
 	void UpdateFramebuffer();
-	void UpdateInput();
+	void UpdateInput(float dtime);
 	void UpdateUIVisibility();
 };

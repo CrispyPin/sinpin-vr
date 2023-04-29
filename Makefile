@@ -1,4 +1,4 @@
-VERSION=v0.2.0
+VERSION=v0.2.1
 # CC := g++
 CC := clang++
 LFLAGS := -lX11 -lXrandr -lXtst -lglfw -lGL

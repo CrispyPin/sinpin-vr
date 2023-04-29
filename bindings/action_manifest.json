@@ -45,6 +45,16 @@
 			"name": "/actions/cursor/in/mouse_right",
 			"requirement": "suggested",
 			"type": "boolean"
+		},
+		{
+			"name": "/actions/cursor/in/mouse_middle",
+			"requirement": "optional",
+			"type": "boolean"
+		},
+		{
+			"name": "/actions/cursor/in/scroll",
+			"requirement": "suggested",
+			"type": "vector2"
 		}
 	],
 	"action_sets": [
@@ -70,8 +80,10 @@
 			"/actions/edit/in/grab": "grab panel",
 			"/actions/edit/in/distance": "push/pull overlay",
 			"/actions/cursor/in/activate_cursor": "activate cursor",
-			"/actions/cursor/in/mouse_left": "mouse left",
-			"/actions/cursor/in/mouse_right": "mouse right"
+			"/actions/cursor/in/mouse_left": "left mouse button",
+			"/actions/cursor/in/mouse_right": "right mouse button",
+			"/actions/cursor/in/mouse_middle": "middle mouse button",
+			"/actions/cursor/in/scroll": "scroll"
 		}
 	]
 }

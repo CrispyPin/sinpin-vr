@@ -26,13 +26,15 @@ class Controller
 
 	void ReleaseOverlay();
 
-	void Update();
+	void Update(float dtime);
 
 	bool _cursor_active;
 
   private:
 	void UpdateStatus();
 	void UpdateLaser();
+
+	void UpdateMouseButton(vr::VRActionHandle_t binding, unsigned int button);
 
 	App *_app;
 	Overlay _laser;
@@ -47,4 +49,6 @@ class Controller
 	Ray _last_ray;
 	glm::vec3 _last_rotation;
 	glm::vec3 _last_pos;
+
+	float _last_sent_scroll;
 };

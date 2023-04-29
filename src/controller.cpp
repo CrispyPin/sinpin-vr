@@ -4,9 +4,10 @@
 #include "util.h"
 #include <string>
 
-const float laser_width = 0.004f;
-const Color edit_col{1, 0.6f, 1};
-const Color cursor_col{0.3f, 1, 1};
+const float LASER_WIDTH = 0.004f;
+const Color EDIT_COLOR{1, 0.6f, 1};
+const Color CURSOR_COLOR{0.3f, 1, 1};
+const float SCROLL_SPEED = 48.0f;
 
 Controller::Controller(App *app, ControllerSide side)
 {
@@ -16,6 +17,7 @@ Controller::Controller(App *app, ControllerSide side)
 	_is_connected = false;
 	_side = side;
 	_cursor_active = false;
+	_last_sent_scroll = 0;
 
 	std::string laser_name = "controller_laser_";
 	if (side == ControllerSide::Left)
@@ -70,7 +72,7 @@ glm::vec3 Controller::GetLastRot()
 	return _last_rotation;
 }
 
-void Controller::Update()
+void Controller::Update(float dtime)
 {
 	UpdateStatus();
 	if (!_is_connected)
@@ -80,7 +82,7 @@ void Controller::Update()
 
 	if (_app->_edit_mode)
 	{
-		_laser.SetColor(edit_col);
+		_laser.SetColor(EDIT_COLOR);
 		if (_last_ray.overlay != nullptr)
 		{
 			auto ray = _last_ray;
@@ -100,7 +102,7 @@ void Controller::Update()
 
 		if (_grabbed_overlay != nullptr)
 		{
-			float move = _app->GetInputAnalog(_app->_input_handles.edit.distance, _input_handle).y * 0.1; // TODO use frame time
+			float move = _app->GetInputAnalog(_app->_input_handles.edit.distance, _input_handle).y * dtime * 8;
 			if (move != 0.0f)
 			{
 				auto transform = _grabbed_overlay->GetTarget()->transform;
@@ -120,7 +122,7 @@ void Controller::Update()
 			}
 			_cursor_active = !_cursor_active;
 			_app->_active_cursor = this;
-			_laser.SetColor(cursor_col);
+			_laser.SetColor(CURSOR_COLOR);
 		}
 		if (_cursor_active)
 		{
@@ -139,17 +141,38 @@ void Controller::Update()
 				pos *= _last_ray.hit_panel->Width();
 				_last_ray.hit_panel->SetCursor(pos.x, pos.y);
 			}
-			auto mouse_left = _app->GetInputDigital(_app->_input_handles.cursor.mouse_left, _input_handle);
-			if (mouse_left.bChanged)
+			UpdateMouseButton(_app->_input_handles.cursor.mouse_left, 1);
+			UpdateMouseButton(_app->_input_handles.cursor.mouse_middle, 2);
+			UpdateMouseButton(_app->_input_handles.cursor.mouse_right, 3);
+			auto scroll_state = _app->GetInputAnalog(_app->_input_handles.cursor.scroll, _input_handle);
+			if (scroll_state.y != 0)
 			{
-				_app->SendMouseInput(1, mouse_left.bState);
-			}
-			auto mouse_right = _app->GetInputDigital(_app->_input_handles.cursor.mouse_right, _input_handle);
-			if (mouse_right.bChanged)
-			{
-				_app->SendMouseInput(3, mouse_right.bState);
+				_last_sent_scroll += dtime * glm::abs(scroll_state.y) * SCROLL_SPEED;
+				if (_last_sent_scroll > 1)
+				{
+					_last_sent_scroll = 0;
+					if (scroll_state.y > 0)
+					{
+						_app->SendMouseInput(4, true);
+						_app->SendMouseInput(4, false);
+					}
+					else if (scroll_state.y < 0)
+					{
+						_app->SendMouseInput(5, true);
+						_app->SendMouseInput(5, false);
+					}
+				}
 			}
 		}
+	}
+}
+
+void Controller::UpdateMouseButton(vr::VRActionHandle_t binding, unsigned int button)
+{
+	auto state = _app->GetInputDigital(binding, _input_handle);
+	if (state.bChanged)
+	{
+		_app->SendMouseInput(button, state.bState);
 	}
 }
 
@@ -170,7 +193,7 @@ void Controller::UpdateLaser()
 	hmd_local_pos.z = 0;
 	auto hmd_dir = glm::normalize(hmd_local_pos);
 
-	VRMat transform = {{{laser_width * hmd_dir.y, 0, laser_width * hmd_dir.x, 0}, {laser_width * -hmd_dir.x, 0, laser_width * hmd_dir.y, 0}, {0, len, 0, len * -0.5f}}};
+	VRMat transform = {{{LASER_WIDTH * hmd_dir.y, 0, LASER_WIDTH * hmd_dir.x, 0}, {LASER_WIDTH * -hmd_dir.x, 0, LASER_WIDTH * hmd_dir.y, 0}, {0, len, 0, len * -0.5f}}};
 	_laser.SetTransformTracker(_device_index, &transform);
 	_laser.SetHidden(!_is_connected || _app->_hidden || (!_app->_edit_mode && !_cursor_active));
 }
