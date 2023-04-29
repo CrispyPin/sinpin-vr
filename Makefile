@@ -1,7 +1,7 @@
 VERSION=v0.1.0
 # CC := g++
 CC := clang++
-LFLAGS := -lX11 -lXrandr -lglfw -lGL
+LFLAGS := -lX11 -lXrandr -lXtst -lglfw -lGL
 LIBS := openvr/libopenvr_api.so
 SRC := src/*.cpp
 OUT := ./sinpin_vr

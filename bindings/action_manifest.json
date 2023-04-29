@@ -32,6 +32,16 @@
 			"type": "boolean"
 		},
 		{
+			"name": "/actions/main/in/mouse_left",
+			"requirement": "suggested",
+			"type": "boolean"
+		},
+		{
+			"name": "/actions/main/in/mouse_right",
+			"requirement": "suggested",
+			"type": "boolean"
+		},
+		{
 			"name": "/actions/main/in/distance",
 			"requirement": "suggested",
 			"type": "vector2"
@@ -52,6 +62,8 @@
 			"/actions/main/in/grab": "grab panel",
 			"/actions/main/in/activate_cursor": "activate cursor",
 			"/actions/main/in/distance": "move away",
+			"/actions/main/in/mouse_left": "mouse left",
+			"/actions/main/in/mouse_right": "mouse right",
 			"/actions/main/in/reset": "reset positions"
 		}
 	]

@@ -23,6 +23,8 @@ struct InputHandles
 	vr::VRActionHandle_t distance;
 	vr::VRActionHandle_t grab;
 	vr::VRActionHandle_t activate_cursor;
+	vr::VRActionHandle_t mouse_left;
+	vr::VRActionHandle_t mouse_right;
 	vr::VRActionHandle_t edit_mode;
 	vr::VRActionHandle_t reset;
 };
@@ -43,6 +45,7 @@ class App
 
 	Ray IntersectRay(glm::vec3 origin, glm::vec3 direction, float max_len);
 	void SetCursor(int x, int y);
+	void SendMouseInput(unsigned int button, bool state);
 
 	Display *_xdisplay;
 	Window _root_window;

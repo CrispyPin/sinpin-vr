@@ -135,6 +135,16 @@ void Controller::Update()
 				pos *= _last_ray.hit_panel->Width();
 				_last_ray.hit_panel->SetCursor(pos.x, pos.y);
 			}
+			auto mouse_left = _app->GetInputDigital(_app->_input_handles.mouse_left, _input_handle);
+			if (mouse_left.bChanged)
+			{
+				_app->SendMouseInput(1, mouse_left.bState);
+			}
+			auto mouse_right = _app->GetInputDigital(_app->_input_handles.mouse_right, _input_handle);
+			if (mouse_right.bChanged)
+			{
+				_app->SendMouseInput(3, mouse_right.bState);
+			}
 		}
 	}
 }

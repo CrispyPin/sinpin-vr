@@ -2,6 +2,7 @@
 #include "controller.h"
 #include "util.h"
 #include <X11/Xlib.h>
+#include <X11/extensions/XTest.h>
 #include <X11/extensions/Xrandr.h>
 #include <cassert>
 #include <glm/matrix.hpp>
@@ -63,6 +64,10 @@ App::App()
 		action_err = vr_input->GetActionHandle("/actions/main/in/reset", &_input_handles.reset);
 		assert(action_err == 0);
 		action_err = vr_input->GetActionHandle("/actions/main/in/distance", &_input_handles.distance);
+		assert(action_err == 0);
+		action_err = vr_input->GetActionHandle("/actions/main/in/mouse_left", &_input_handles.mouse_left);
+		assert(action_err == 0);
+		action_err = vr_input->GetActionHandle("/actions/main/in/mouse_right", &_input_handles.mouse_right);
 		assert(action_err == 0);
 		action_err = vr_input->GetActionSetHandle("/actions/main", &_input_handles.set);
 		assert(action_err == 0);
@@ -291,4 +296,9 @@ void App::SetCursor(int x, int y)
 {
 	// I don't know what the return value of XWarpPointer means, it seems to be 1 on success.
 	XWarpPointer(_xdisplay, _root_window, _root_window, 0, 0, _root_width, _root_height, x, y);
+}
+
+void App::SendMouseInput(unsigned int button, bool state)
+{
+	XTestFakeButtonEvent(_xdisplay, button, state, 0);
 }
