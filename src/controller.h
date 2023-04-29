@@ -28,6 +28,8 @@ class Controller
 
 	void Update();
 
+	bool _cursor_active;
+
   private:
 	void UpdateStatus();
 	void UpdateLaser();
@@ -40,7 +42,6 @@ class Controller
 
 	bool _is_connected;
 
-	bool _cursor_active;
 	Overlay *_grabbed_overlay;
 
 	Ray _last_ray;

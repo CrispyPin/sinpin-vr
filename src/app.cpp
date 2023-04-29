@@ -199,6 +199,11 @@ void App::UpdateInput()
 		{
 			_edit_mode = !_edit_mode;
 			UpdateUIVisibility();
+			if (_edit_mode && _active_cursor.has_value())
+			{
+				_active_cursor.value()->_cursor_active = false;
+				_active_cursor = {};
+			}
 		}
 	}
 	_controllers[0]->Update();

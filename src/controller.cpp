@@ -4,7 +4,9 @@
 #include "util.h"
 #include <string>
 
-const float width = 0.004f;
+const float laser_width = 0.004f;
+const Color edit_col{1, 0.6f, 1};
+const Color cursor_col{0.3f, 1, 1};
 
 Controller::Controller(App *app, ControllerSide side)
 {
@@ -23,7 +25,7 @@ Controller::Controller(App *app, ControllerSide side)
 
 	_laser = Overlay(app, laser_name);
 	UpdateStatus();
-	_laser.SetTextureToColor(255, 200, 255);
+	_laser.SetTextureToColor(255, 255, 255);
 	_laser.SetAlpha(0.2f);
 	_laser.SetHidden(true);
 }
@@ -78,6 +80,7 @@ void Controller::Update()
 
 	if (_app->_edit_mode)
 	{
+		_laser.SetColor(edit_col);
 		if (_last_ray.overlay != nullptr)
 		{
 			auto ray = _last_ray;
@@ -106,7 +109,7 @@ void Controller::Update()
 			}
 		}
 	}
-	else //view mode
+	else // cursor mode
 	{
 		if (_app->IsInputJustPressed(_app->_input_handles.cursor.activate, _input_handle))
 		{
@@ -117,6 +120,7 @@ void Controller::Update()
 			}
 			_cursor_active = !_cursor_active;
 			_app->_active_cursor = this;
+			_laser.SetColor(cursor_col);
 		}
 		if (_cursor_active)
 		{
@@ -166,7 +170,7 @@ void Controller::UpdateLaser()
 	hmd_local_pos.z = 0;
 	auto hmd_dir = glm::normalize(hmd_local_pos);
 
-	VRMat transform = {{{width * hmd_dir.y, 0, width * hmd_dir.x, 0}, {width * -hmd_dir.x, 0, width * hmd_dir.y, 0}, {0, len, 0, len * -0.5f}}};
+	VRMat transform = {{{laser_width * hmd_dir.y, 0, laser_width * hmd_dir.x, 0}, {laser_width * -hmd_dir.x, 0, laser_width * hmd_dir.y, 0}, {0, len, 0, len * -0.5f}}};
 	_laser.SetTransformTracker(_device_index, &transform);
 	_laser.SetHidden(!_is_connected || _app->_hidden || (!_app->_edit_mode && !_cursor_active));
 }

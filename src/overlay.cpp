@@ -108,6 +108,17 @@ void Overlay::SetTextureToColor(uint8_t r, uint8_t g, uint8_t b)
 	assert(set_texture_err == 0);
 }
 
+void Overlay::SetColor(float r, float g, float b)
+{
+	auto set_color_err = _app->vr_overlay->SetOverlayColor(_id, r, g, b);
+	assert(set_color_err == 0);
+}
+
+void Overlay::SetColor(Color c)
+{
+	SetColor(c.r, c.g, c.b);
+}
+
 void Overlay::SetTransformTracker(TrackerID tracker, const VRMat *transform)
 {
 	auto original_pose = _target.transform;

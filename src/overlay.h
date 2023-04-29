@@ -43,6 +43,8 @@ class Overlay
 	void SetRatio(float ratio);
 	void SetTexture(vr::Texture_t *texture);
 	void SetTextureToColor(uint8_t r, uint8_t g, uint8_t b);
+	void SetColor(float r, float g, float b);
+	void SetColor(Color c);
 
 	glm::mat4x4 GetTransformAbsolute();
 	Target *GetTarget();
