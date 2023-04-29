@@ -81,7 +81,7 @@ void Controller::Update()
 		if (_last_ray.overlay != nullptr)
 		{
 			auto ray = _last_ray;
-			if (_app->IsInputJustPressed(_app->_input_handles.grab, _input_handle))
+			if (_app->IsInputJustPressed(_app->_input_handles.edit.grab, _input_handle))
 			{
 				if (ray.overlay->IsHeld())
 				{
@@ -97,7 +97,7 @@ void Controller::Update()
 
 		if (_grabbed_overlay != nullptr)
 		{
-			float move = _app->GetInputAnalog(_app->_input_handles.distance, _input_handle).y * 0.1; // TODO use frame time
+			float move = _app->GetInputAnalog(_app->_input_handles.edit.distance, _input_handle).y * 0.1; // TODO use frame time
 			if (move != 0.0f)
 			{
 				auto transform = _grabbed_overlay->GetTarget()->transform;
@@ -108,7 +108,7 @@ void Controller::Update()
 	}
 	else //view mode
 	{
-		if (_app->IsInputJustPressed(_app->_input_handles.activate_cursor, _input_handle))
+		if (_app->IsInputJustPressed(_app->_input_handles.cursor.activate, _input_handle))
 		{
 			if (!_cursor_active && _app->_active_cursor.has_value())
 			{
@@ -135,12 +135,12 @@ void Controller::Update()
 				pos *= _last_ray.hit_panel->Width();
 				_last_ray.hit_panel->SetCursor(pos.x, pos.y);
 			}
-			auto mouse_left = _app->GetInputDigital(_app->_input_handles.mouse_left, _input_handle);
+			auto mouse_left = _app->GetInputDigital(_app->_input_handles.cursor.mouse_left, _input_handle);
 			if (mouse_left.bChanged)
 			{
 				_app->SendMouseInput(1, mouse_left.bState);
 			}
-			auto mouse_right = _app->GetInputDigital(_app->_input_handles.mouse_right, _input_handle);
+			auto mouse_right = _app->GetInputDigital(_app->_input_handles.cursor.mouse_right, _input_handle);
 			if (mouse_right.bChanged)
 			{
 				_app->SendMouseInput(3, mouse_right.bState);

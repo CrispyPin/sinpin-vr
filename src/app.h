@@ -18,15 +18,26 @@ struct CursorPos
 
 struct InputHandles
 {
-	vr::VRActionSetHandle_t set;
-	vr::VRActionHandle_t toggle_hidden;
-	vr::VRActionHandle_t distance;
-	vr::VRActionHandle_t grab;
-	vr::VRActionHandle_t activate_cursor;
-	vr::VRActionHandle_t mouse_left;
-	vr::VRActionHandle_t mouse_right;
-	vr::VRActionHandle_t edit_mode;
-	vr::VRActionHandle_t reset;
+	struct
+	{
+		vr::VRActionHandle_t toggle_hidden;
+		vr::VRActionHandle_t edit_mode;
+		vr::VRActionHandle_t reset;
+	} main;
+	vr::VRActionSetHandle_t main_set;
+	struct
+	{
+		vr::VRActionHandle_t activate;
+		vr::VRActionHandle_t mouse_left;
+		vr::VRActionHandle_t mouse_right;
+	} cursor;
+	vr::VRActionSetHandle_t cursor_set;
+	struct
+	{
+		vr::VRActionHandle_t distance;
+		vr::VRActionHandle_t grab;
+	} edit;
+	vr::VRActionSetHandle_t edit_set;
 };
 
 class App

@@ -53,23 +53,27 @@ App::App()
 		printf("actions path: %s\n", _actions_path.c_str());
 		vr_input->SetActionManifestPath(_actions_path.c_str());
 
-		auto action_err = vr_input->GetActionHandle("/actions/main/in/grab", &_input_handles.grab);
+		auto action_err = vr_input->GetActionHandle("/actions/edit/in/grab", &_input_handles.edit.grab);
 		assert(action_err == 0);
-		action_err = vr_input->GetActionHandle("/actions/main/in/toggle_visibility", &_input_handles.toggle_hidden);
+		action_err = vr_input->GetActionHandle("/actions/main/in/toggle_visibility", &_input_handles.main.toggle_hidden);
 		assert(action_err == 0);
-		action_err = vr_input->GetActionHandle("/actions/main/in/activate_cursor", &_input_handles.activate_cursor);
+		action_err = vr_input->GetActionHandle("/actions/cursor/in/activate_cursor", &_input_handles.cursor.activate);
 		assert(action_err == 0);
-		action_err = vr_input->GetActionHandle("/actions/main/in/edit_mode", &_input_handles.edit_mode);
+		action_err = vr_input->GetActionHandle("/actions/main/in/edit_mode", &_input_handles.main.edit_mode);
 		assert(action_err == 0);
-		action_err = vr_input->GetActionHandle("/actions/main/in/reset", &_input_handles.reset);
+		action_err = vr_input->GetActionHandle("/actions/main/in/reset", &_input_handles.main.reset);
 		assert(action_err == 0);
-		action_err = vr_input->GetActionHandle("/actions/main/in/distance", &_input_handles.distance);
+		action_err = vr_input->GetActionHandle("/actions/edit/in/distance", &_input_handles.edit.distance);
 		assert(action_err == 0);
-		action_err = vr_input->GetActionHandle("/actions/main/in/mouse_left", &_input_handles.mouse_left);
+		action_err = vr_input->GetActionHandle("/actions/cursor/in/mouse_left", &_input_handles.cursor.mouse_left);
 		assert(action_err == 0);
-		action_err = vr_input->GetActionHandle("/actions/main/in/mouse_right", &_input_handles.mouse_right);
+		action_err = vr_input->GetActionHandle("/actions/cursor/in/mouse_right", &_input_handles.cursor.mouse_right);
 		assert(action_err == 0);
-		action_err = vr_input->GetActionSetHandle("/actions/main", &_input_handles.set);
+		action_err = vr_input->GetActionSetHandle("/actions/main", &_input_handles.main_set);
+		assert(action_err == 0);
+		action_err = vr_input->GetActionSetHandle("/actions/edit", &_input_handles.edit_set);
+		assert(action_err == 0);
+		action_err = vr_input->GetActionSetHandle("/actions/cursor", &_input_handles.cursor_set);
 		assert(action_err == 0);
 	}
 }
@@ -151,19 +155,27 @@ void App::Update()
 
 void App::UpdateInput()
 {
-	vr::VRActiveActionSet_t main;
-	main.ulActionSet = _input_handles.set;
-	main.ulRestrictedToDevice = 0;
-	main.nPriority = 10;
-	vr::EVRInputError err = vr_input->UpdateActionState(&main, sizeof(vr::VRActiveActionSet_t), 1);
-	if (err)
+	vr::VRActiveActionSet_t active_sets[2];
+	active_sets[0].ulActionSet = _input_handles.main_set;
+	active_sets[0].ulRestrictedToDevice = 0;
+	active_sets[0].nPriority = 10;
+	int set_count = 1;
+	if (!_hidden)
 	{
-		printf("Error: (update action state): %d\n", err);
+		set_count = 2;
+		active_sets[1].ulRestrictedToDevice = 0;
+		active_sets[1].nPriority = 10;
+		active_sets[1].ulActionSet = _input_handles.cursor_set;
+		if (_edit_mode)
+			active_sets[1].ulActionSet = _input_handles.edit_set;
 	}
+	vr::EVRInputError err = vr_input->UpdateActionState(active_sets, sizeof(vr::VRActiveActionSet_t), set_count);
+	if (err)
+		printf("Error updating action state: %d\n", err);
 
 	vr_sys->GetDeviceToAbsoluteTrackingPose(_tracking_origin, 0, _tracker_poses, MAX_TRACKERS);
 
-	if (IsInputJustPressed(_input_handles.toggle_hidden))
+	if (IsInputJustPressed(_input_handles.main.toggle_hidden))
 	{
 		_hidden = !_hidden;
 		for (auto &panel : _panels)
@@ -174,7 +186,7 @@ void App::UpdateInput()
 	}
 	if (!_hidden)
 	{
-		if (IsInputJustPressed(_input_handles.reset))
+		if (IsInputJustPressed(_input_handles.main.reset))
 		{
 			_root_overlay.SetTransformWorld(&root_start_pose);
 			_root_overlay.SetWidth(0.25f);
@@ -183,7 +195,7 @@ void App::UpdateInput()
 				panel.ResetTransform();
 			}
 		}
-		if (IsInputJustPressed(_input_handles.edit_mode))
+		if (IsInputJustPressed(_input_handles.main.edit_mode))
 		{
 			_edit_mode = !_edit_mode;
 			UpdateUIVisibility();

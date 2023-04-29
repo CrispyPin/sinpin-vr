@@ -208,10 +208,10 @@ void Overlay::Update()
 
 	if (_holding_controller != nullptr)
 	{
-		bool hold_controller_holding = _app->GetInputDigital(_app->_input_handles.grab, _holding_controller->InputHandle()).bState;
+		bool hold_controller_holding = _app->GetInputDigital(_app->_input_handles.edit.grab, _holding_controller->InputHandle()).bState;
 		if (_resize_controller != nullptr)
 		{
-			bool resize_controller_holding = _app->GetInputDigital(_app->_input_handles.grab, _resize_controller->InputHandle()).bState;
+			bool resize_controller_holding = _app->GetInputDigital(_app->_input_handles.edit.grab, _resize_controller->InputHandle()).bState;
 			if (!resize_controller_holding)
 			{
 				_resize_controller = nullptr;

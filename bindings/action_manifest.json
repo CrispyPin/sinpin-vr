@@ -17,54 +17,61 @@
 			"type": "boolean"
 		},
 		{
-			"name": "/actions/main/in/grab",
-			"requirement": "mandatory",
-			"type": "boolean"
-		},
-		{
-			"name": "/actions/main/in/activate_cursor",
-			"requirement": "suggested",
-			"type": "boolean"
-		},
-		{
 			"name": "/actions/main/in/reset",
 			"requirement": "suggested",
 			"type": "boolean"
 		},
 		{
-			"name": "/actions/main/in/mouse_left",
-			"requirement": "suggested",
+			"name": "/actions/edit/in/grab",
+			"requirement": "mandatory",
 			"type": "boolean"
 		},
 		{
-			"name": "/actions/main/in/mouse_right",
-			"requirement": "suggested",
-			"type": "boolean"
-		},
-		{
-			"name": "/actions/main/in/distance",
+			"name": "/actions/edit/in/distance",
 			"requirement": "suggested",
 			"type": "vector2"
+		},
+		{
+			"name": "/actions/cursor/in/activate_cursor",
+			"requirement": "suggested",
+			"type": "boolean"
+		},
+		{
+			"name": "/actions/cursor/in/mouse_left",
+			"requirement": "suggested",
+			"type": "boolean"
+		},
+		{
+			"name": "/actions/cursor/in/mouse_right",
+			"requirement": "suggested",
+			"type": "boolean"
 		}
 	],
 	"action_sets": [
 		{
 			"name": "/actions/main",
 			"usage": "leftright"
+		},
+		{
+			"name": "/actions/edit",
+			"usage": "single"
+		},
+		{
+			"name": "/actions/cursor",
+			"usage": "single"
 		}
 	],
 	"localization": [
 		{
 			"language_tag": "en_us",
-			"/actions/main": "Overlay actions",
 			"/actions/main/in/toggle_visibility": "toggle visibility",
 			"/actions/main/in/edit_mode": "toggle edit mode",
-			"/actions/main/in/grab": "grab panel",
-			"/actions/main/in/activate_cursor": "activate cursor",
-			"/actions/main/in/distance": "move away",
-			"/actions/main/in/mouse_left": "mouse left",
-			"/actions/main/in/mouse_right": "mouse right",
-			"/actions/main/in/reset": "reset positions"
+			"/actions/main/in/reset": "reset positions",
+			"/actions/edit/in/grab": "grab panel",
+			"/actions/edit/in/distance": "push/pull overlay",
+			"/actions/cursor/in/activate_cursor": "activate cursor",
+			"/actions/cursor/in/mouse_left": "mouse left",
+			"/actions/cursor/in/mouse_right": "mouse right"
 		}
 	]
 }
