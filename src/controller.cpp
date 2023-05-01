@@ -7,7 +7,8 @@
 const float LASER_WIDTH = 0.004f;
 const Color EDIT_COLOR{1, 0.6f, 1};
 const Color CURSOR_COLOR{0.3f, 1, 1};
-const float SCROLL_SPEED = 48.0f;
+const float SCROLL_SPEED = 48;
+const float MOUSE_DRAG_THRESHOLD = 48;
 
 Controller::Controller(App *app, ControllerSide side)
 {
@@ -16,8 +17,6 @@ Controller::Controller(App *app, ControllerSide side)
 	_input_handle = 0;
 	_is_connected = false;
 	_side = side;
-	_cursor_active = false;
-	_last_sent_scroll = 0;
 
 	std::string laser_name = "controller_laser_";
 	if (side == ControllerSide::Left)
@@ -126,7 +125,6 @@ void Controller::Update(float dtime)
 		}
 		if (_cursor_active)
 		{
-			// printf("update cursor on hand %d\n", _side);
 			if (_last_ray.overlay != nullptr && _last_ray.hit_panel != nullptr)
 			{
 				auto pos = glm::vec2(_last_ray.local_pos.x, _last_ray.local_pos.y);
@@ -139,7 +137,15 @@ void Controller::Update(float dtime)
 				pos.y += 0.5f * _last_ray.overlay->Ratio();
 
 				pos *= _last_ray.hit_panel->Width();
-				_last_ray.hit_panel->SetCursor(pos.x, pos.y);
+				if (glm::length(pos - _last_set_mouse_pos) > MOUSE_DRAG_THRESHOLD)
+				{
+					_mouse_drag_lock = false;
+				}
+				if (!_mouse_drag_lock)
+				{
+					_last_ray.hit_panel->SetCursor(pos.x, pos.y);
+					_last_set_mouse_pos = pos;
+				}
 			}
 			UpdateMouseButton(_app->_input_handles.cursor.mouse_left, 1);
 			UpdateMouseButton(_app->_input_handles.cursor.mouse_middle, 2);
@@ -173,6 +179,7 @@ void Controller::UpdateMouseButton(vr::VRActionHandle_t binding, unsigned int bu
 	if (state.bChanged)
 	{
 		_app->SendMouseInput(button, state.bState);
+		_mouse_drag_lock = state.bState;
 	}
 }
 

@@ -142,6 +142,7 @@ void App::InitRootOverlay()
 	_root_overlay.SetWidth(0.25f);
 	_root_overlay.SetTransformWorld(&root_start_pose);
 	_root_overlay.SetTextureToColor(110, 30, 190);
+	_root_overlay.SetHidden(true);
 }
 
 void App::Update(float dtime)

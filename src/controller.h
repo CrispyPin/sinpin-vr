@@ -28,7 +28,7 @@ class Controller
 
 	void Update(float dtime);
 
-	bool _cursor_active;
+	bool _cursor_active = false;
 
   private:
 	void UpdateStatus();
@@ -50,5 +50,7 @@ class Controller
 	glm::vec3 _last_rotation;
 	glm::vec3 _last_pos;
 
-	float _last_sent_scroll;
+	float _last_sent_scroll = 0;
+	bool _mouse_drag_lock = false;
+	glm::vec2 _last_set_mouse_pos;
 };
