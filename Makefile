@@ -1,6 +1,6 @@
-VERSION=v0.2.1
-# CC := g++
-CC := clang++
+VERSION=v0.2.2
+CC := g++
+# CC := clang++
 LFLAGS := -lX11 -lXrandr -lXtst -lglfw -lGL
 LIBS := openvr/libopenvr_api.so
 SRC := src/*.cpp
