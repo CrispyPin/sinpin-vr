@@ -8,6 +8,8 @@ const float LASER_WIDTH = 0.004f;
 const Color EDIT_COLOR{1, 0.6f, 1};
 const Color CURSOR_COLOR{0.3f, 1, 1};
 const float SCROLL_SPEED = 48;
+const float SCROLL_HAPTIC_STRENGTH = 0.15f;
+const float SCROLL_HAPTIC_TIME = 0.1f;
 const float MOUSE_DRAG_THRESHOLD = 48;
 
 Controller::Controller(App *app, ControllerSide side)
@@ -161,11 +163,13 @@ void Controller::Update(float dtime)
 					{
 						_app->SendMouseInput(4, true);
 						_app->SendMouseInput(4, false);
+						_app->vr_input->TriggerHapticVibrationAction(_app->_input_handles.cursor.scroll_haptic, 0, SCROLL_HAPTIC_TIME, 1 / SCROLL_HAPTIC_TIME, SCROLL_HAPTIC_STRENGTH, _input_handle);
 					}
 					else if (scroll_state.y < 0)
 					{
 						_app->SendMouseInput(5, true);
 						_app->SendMouseInput(5, false);
+						_app->vr_input->TriggerHapticVibrationAction(_app->_input_handles.cursor.scroll_haptic, 0, SCROLL_HAPTIC_TIME, 1 / SCROLL_HAPTIC_TIME, SCROLL_HAPTIC_STRENGTH, _input_handle);
 					}
 				}
 			}

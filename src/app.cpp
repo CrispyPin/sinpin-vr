@@ -75,6 +75,8 @@ App::App()
 		assert(action_err == 0);
 		action_err = vr_input->GetActionHandle("/actions/cursor/in/scroll", &_input_handles.cursor.scroll);
 		assert(action_err == 0);
+		action_err = vr_input->GetActionHandle("/actions/cursor/out/scroll_haptic", &_input_handles.cursor.scroll_haptic);
+		assert(action_err == 0);
 		action_err = vr_input->GetActionSetHandle("/actions/main", &_input_handles.main_set);
 		assert(action_err == 0);
 		action_err = vr_input->GetActionSetHandle("/actions/edit", &_input_handles.edit_set);

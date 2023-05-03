@@ -32,6 +32,7 @@ struct InputHandles
 		vr::VRActionHandle_t mouse_right;
 		vr::VRActionHandle_t mouse_middle;
 		vr::VRActionHandle_t scroll;
+		vr::VRActionHandle_t scroll_haptic;
 	} cursor;
 	vr::VRActionSetHandle_t cursor_set;
 	struct

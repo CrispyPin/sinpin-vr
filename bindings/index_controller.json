@@ -141,6 +141,16 @@
    "app_key" : "system.generated.sinpin_vr",
    "bindings" : {
       "/actions/cursor" : {
+         "haptics" : [
+            {
+               "output" : "/actions/cursor/out/scroll_haptic",
+               "path" : "/user/hand/left/output/haptic"
+            },
+            {
+               "output" : "/actions/cursor/out/scroll_haptic",
+               "path" : "/user/hand/right/output/haptic"
+            }
+         ],
          "sources" : [
             {
                "inputs" : {

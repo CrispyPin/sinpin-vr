@@ -55,6 +55,11 @@
 			"name": "/actions/cursor/in/scroll",
 			"requirement": "suggested",
 			"type": "vector2"
+		},
+		{
+			"name": "/actions/cursor/out/scroll_haptic",
+			"requirement": "suggested",
+			"type": "vibration"
 		}
 	],
 	"action_sets": [
@@ -83,7 +88,8 @@
 			"/actions/cursor/in/mouse_left": "left mouse button",
 			"/actions/cursor/in/mouse_right": "right mouse button",
 			"/actions/cursor/in/mouse_middle": "middle mouse button",
-			"/actions/cursor/in/scroll": "scroll"
+			"/actions/cursor/in/scroll": "scroll",
+			"/actions/cursor/out/scroll_haptic": "scrolling haptic feedback"
 		}
 	]
 }
