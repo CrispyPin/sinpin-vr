@@ -159,28 +159,29 @@ void Overlay::SetTargetWorld()
 	SetTransformWorld(&abs_pose);
 }
 
-Ray Overlay::IntersectRay(glm::vec3 origin, glm::vec3 direction, float max_len)
+Ray Overlay::IntersectRay(glm::vec3 ray_start_g, glm::vec3 direction, float max_len)
 {
 	float dist = max_len;
-	auto end = origin + direction * max_len;
+	auto ray_end_g = ray_start_g + direction * max_len;
 
 	auto panel_transform = GetTransformAbsolute();
 	auto panel_pos = GetPos(panel_transform);
-	auto a = glm::inverse(panel_transform) * glm::vec4(origin - panel_pos, 0);
-	auto b = glm::inverse(panel_transform) * glm::vec4(end - panel_pos, 0);
-	float r = a.z / (a.z - b.z);
-	auto p = a + (b - a) * r;
-	// printf("panel pos: (%.2f,%.2f,%.2f)\n", panel_pos.x, panel_pos.y, panel_pos.z);
-	// printf("a: (%.2f,%.2f,%.2f)\n", a.x, a.y, a.z);
-	// printf("b: (%.2f,%.2f,%.2f)\n", b.x, b.y, b.z);
-	// printf("r: %.2f\n", r);
-	// printf("p: (%.2f,%.2f,%.2f)\n", p.x, p.y, p.z);
+	auto ray_start = glm::inverse(panel_transform) * glm::vec4(ray_start_g - panel_pos, 0);
+	auto ray_end = glm::inverse(panel_transform) * glm::vec4(ray_end_g - panel_pos, 0);
+	float length_frac = ray_start.z / (ray_start.z - ray_end.z);
+	auto hit_pos = ray_start + (ray_end - ray_start) * length_frac;
 
-	if (b.z < a.z && b.z < 0 && glm::abs(p.x) < (_width_m * 0.5f) && glm::abs(p.y) < (_width_m * 0.5f * _ratio))
+	// clang-format off
+	if (ray_end.z < ray_start.z
+		&& ray_end.z < 0
+		&& glm::abs(hit_pos.x) < (_width_m * 0.5f)
+		&& glm::abs(hit_pos.y) < (_width_m * 0.5f * _ratio)
+		&& length_frac > 0)
 	{
-		dist = glm::min(r * max_len, max_len);
+		// clang-format on
+		dist = glm::min(length_frac * max_len, max_len);
 	}
-	return Ray{.overlay = this, .distance = dist, .local_pos = p, .hit_panel = nullptr};
+	return Ray{.overlay = this, .distance = dist, .local_pos = hit_pos, .hit_panel = nullptr};
 }
 
 glm::mat4x4 Overlay::GetTransformAbsolute()
