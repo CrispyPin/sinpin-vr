@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../openvr/openvr.h"
+#include "../lib/openvr.h"
 #include <glm/glm.hpp>
 
 typedef vr::TrackedDeviceIndex_t TrackerID;
