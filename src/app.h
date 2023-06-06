@@ -33,6 +33,7 @@ struct InputHandles
 		vr::VRActionHandle_t mouse_middle;
 		vr::VRActionHandle_t scroll;
 		vr::VRActionHandle_t scroll_haptic;
+		vr::VRActionHandle_t toggle_transparent;
 	} cursor;
 	vr::VRActionSetHandle_t cursor_set;
 	struct
@@ -87,6 +88,7 @@ class App
 	Overlay _root_overlay;
 	std::vector<Panel> _panels;
 	bool _hidden = false;
+	bool _transparent = false;
 	bool _edit_mode = false;
 	std::optional<Controller *> _active_cursor;
 

@@ -10,6 +10,7 @@
 const VRMat root_start_pose = {{{1, 0, 0, 0}, {0, 1, 0, 0.8f}, {0, 0, 1, 0}}}; // 0.8m above origin
 
 const int FRAME_INTERVAL = 4; // number of update loops until the frame buffer is updated
+const float TRANSPARENCY = 0.6f;
 
 App::App()
 {
@@ -74,6 +75,8 @@ App::App()
 		action_err = vr_input->GetActionHandle("/actions/cursor/in/mouse_middle", &_input_handles.cursor.mouse_middle);
 		assert(action_err == 0);
 		action_err = vr_input->GetActionHandle("/actions/cursor/in/scroll", &_input_handles.cursor.scroll);
+		assert(action_err == 0);
+		action_err = vr_input->GetActionHandle("/actions/cursor/in/toggle_transparent", &_input_handles.cursor.toggle_transparent);
 		assert(action_err == 0);
 		action_err = vr_input->GetActionHandle("/actions/cursor/out/scroll_haptic", &_input_handles.cursor.scroll_haptic);
 		assert(action_err == 0);
@@ -192,6 +195,20 @@ void App::UpdateInput(float dtime)
 			panel.SetHidden(_hidden);
 		}
 		UpdateUIVisibility();
+	}
+	if (IsInputJustPressed(_input_handles.cursor.toggle_transparent))
+	{
+		_transparent = !_transparent;
+		if (_transparent)
+		{
+			for (auto &panel : _panels)
+				panel.GetOverlay()->SetAlpha(TRANSPARENCY);
+		}
+		else
+		{
+			for (auto &panel : _panels)
+				panel.GetOverlay()->SetAlpha(1);
+		}
 	}
 	if (!_hidden)
 	{

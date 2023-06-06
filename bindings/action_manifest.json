@@ -57,6 +57,11 @@
 			"type": "vector2"
 		},
 		{
+			"name": "/actions/cursor/in/toggle_transparent",
+			"requirement": "suggested",
+			"type": "boolean"
+		},
+		{
 			"name": "/actions/cursor/out/scroll_haptic",
 			"requirement": "suggested",
 			"type": "vibration"
@@ -89,6 +94,7 @@
 			"/actions/cursor/in/mouse_right": "right mouse button",
 			"/actions/cursor/in/mouse_middle": "middle mouse button",
 			"/actions/cursor/in/scroll": "scroll",
+			"/actions/cursor/in/toggle_transparent": "toggle transparency",
 			"/actions/cursor/out/scroll_haptic": "scrolling haptic feedback"
 		}
 	]
